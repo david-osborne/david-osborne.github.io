@@ -29,7 +29,7 @@ function init() {
     cvs = document.getElementById('canvas');
     ctx = cvs.getContext('2d');
 
-    scaleCanvas();
+    //scaleCanvas();
 
     const startTime = new Date;
     gbl_timestampStart = startTime;
@@ -63,9 +63,9 @@ function windowSize() {
     gbl_canvasWidth = window.innerWidth;
     gbl_canvasHeight = window.innerHeight;
 
-    scaleCanvas();
-    //ctx.canvas.width = gbl_canvasWidth;
-    //ctx.canvas.height = gbl_canvasHeight;
+    //scaleCanvas();
+    ctx.canvas.width = gbl_canvasWidth;
+    ctx.canvas.height = gbl_canvasHeight;
 }
 
 function backingScale(context) {
@@ -313,7 +313,7 @@ function drawVersion() {
     ctx.fillRect(0, gbl_canvasHeight-24, 100, 24);
     ctx.fillStyle = 'white';
     ctx.font = '16px Arial, sans-serif';
-    ctx.fillText('Version 0.02', 10, gbl_canvasHeight-6);
+    ctx.fillText('Version 0.03', 10, gbl_canvasHeight-6);
 }
 function drawCrosshairs() {
     let x = gbl_mouseX;

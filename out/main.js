@@ -257,7 +257,7 @@ function drawVersion() {
     ctx.fillRect(0, gbl_canvasHeight - 24, 100, 24);
     ctx.fillStyle = 'white';
     ctx.font = '16px Arial, sans-serif';
-    ctx.fillText('Version 0.1', 10, gbl_canvasHeight - 6);
+    ctx.fillText('Version 0.01', 10, gbl_canvasHeight - 6);
 }
 function drawCrosshairs() {
     var x = gbl_mouseX;
@@ -292,6 +292,7 @@ function mouseMove(e) {
     gbl_mouseY = e.clientY - rect.top;
 }
 function touchMove(e) {
+    e.preventDefault();
     //var rect = cvs.getBoundingClientRect(); //get canvas boundries
     gbl_mouseX = e.touches[0].clientX;
     gbl_mouseY = e.touches[0].clientY;

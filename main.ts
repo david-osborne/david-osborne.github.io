@@ -29,6 +29,8 @@ function init() {
     cvs = document.getElementById('canvas');
     ctx = cvs.getContext('2d');
 
+    scaleCanvas();
+
     const startTime = new Date;
     gbl_timestampStart = startTime;
 
@@ -40,18 +42,39 @@ function init() {
     cvs.addEventListener('touchstart', mouseDown);
     cvs.addEventListener('touchend', mouseUp);
     cvs.addEventListener('touchmove', touchMove);
-
     window.addEventListener('resize', windowSize);
 
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
 }
 
+function scaleCanvas() {
+    var scaleFactor = backingScale(ctx);
+
+    if (scaleFactor > 1) {
+        ctx.canvas.width = ctx.canvas.width * scaleFactor;
+        ctx.canvas.height = ctx.canvas.height * scaleFactor
+        // update the context for the new canvas scale
+        ctx = cvs.getContext("2d");
+    }
+}
+
 function windowSize() {
     gbl_canvasWidth = window.innerWidth;
     gbl_canvasHeight = window.innerHeight;
-    ctx.canvas.width = gbl_canvasWidth;
-    ctx.canvas.height = gbl_canvasHeight;
+
+    scaleCanvas();
+    //ctx.canvas.width = gbl_canvasWidth;
+    //ctx.canvas.height = gbl_canvasHeight;
+}
+
+function backingScale(context) {
+    if ('devicePixelRatio' in window) {
+        if (window.devicePixelRatio > 1) {
+            return window.devicePixelRatio;
+        }
+    }
+    return 1;
 }
 
 function gameLoop(timeStamp) {
@@ -290,7 +313,7 @@ function drawVersion() {
     ctx.fillRect(0, gbl_canvasHeight-24, 100, 24);
     ctx.fillStyle = 'white';
     ctx.font = '16px Arial, sans-serif';
-    ctx.fillText('Version 0.01', 10, gbl_canvasHeight-6);
+    ctx.fillText('Version 0.02', 10, gbl_canvasHeight-6);
 }
 function drawCrosshairs() {
     let x = gbl_mouseX;

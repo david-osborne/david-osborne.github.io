@@ -64,6 +64,7 @@ function gameLoop(timeStamp) {
     drawTextExplain();
     drawBartText();
     drawScreenSizeText();
+    drawVersion();
     // Keep requesting new frames
     window.requestAnimationFrame(gameLoop);
 }
@@ -250,6 +251,13 @@ function drawScreenSizeText() {
     ctx.fillStyle = 'white';
     ctx.font = '14px Arial, sans-serif';
     ctx.fillText('Try pressing "F11" to enter full screen', 10, 214);
+}
+function drawVersion() {
+    ctx.fillStyle = 'slateblue';
+    ctx.fillRect(0, gbl_canvasHeight - 24, 100, 24);
+    ctx.fillStyle = 'white';
+    ctx.font = '16px Arial, sans-serif';
+    ctx.fillText('Version 0.1', 10, gbl_canvasHeight - 6);
 }
 function drawCrosshairs() {
     var x = gbl_mouseX;

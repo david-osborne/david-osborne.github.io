@@ -37,6 +37,9 @@ function init() {
     cvs.addEventListener('mouseup', mouseUp);
     document.addEventListener('keydown', keyDown);
     document.addEventListener('keyup', keyUp);
+    cvs.addEventListener('touchstart', mouseDown);
+    cvs.addEventListener('touchend', mouseUp);
+    cvs.addEventListener('touchmove', touchMove);
 
     window.addEventListener('resize', windowSize);
 
@@ -184,8 +187,6 @@ function draw() {
     for (let i = 0; i < gbl_listX.length; i++) {
         ctx.fillStyle = gbl_listC[i];
 
-        console.log(gbl_listT[i].toString());
-
         if (gbl_listT[i] == 1) //circle
         {
             ctx.beginPath();
@@ -318,6 +319,12 @@ function mouseMove(e) {
     var rect = cvs.getBoundingClientRect(); //get canvas boundries
     gbl_mouseX = e.clientX - rect.left;
     gbl_mouseY = e.clientY - rect.top;
+}
+
+function touchMove(e) {
+    //var rect = cvs.getBoundingClientRect(); //get canvas boundries
+    gbl_mouseX = e.touches[0].clientX;
+    gbl_mouseY = e.touches[0].clientY;
 }
 
 function mouseDown(e) {

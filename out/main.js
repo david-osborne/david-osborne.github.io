@@ -58,6 +58,9 @@ function gameLoop(timeStamp) {
     drawBart();
     drawCrosshairs();
     drawText(fps);
+    drawTextExplain();
+    drawBartText();
+    drawScreenSizeText();
     // Keep requesting new frames
     window.requestAnimationFrame(gameLoop);
 }
@@ -206,7 +209,7 @@ function drawText(fps) {
     var ss = d.getSeconds().toString();
     var ms = d.getMilliseconds().toString();
     ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, 280, 150);
+    ctx.fillRect(0, 0, 280, 130);
     ctx.font = '24px Courier New';
     ctx.fillStyle = 'orange';
     ctx.fillText('FPS: ' + fps, 10, 22);
@@ -216,8 +219,35 @@ function drawText(fps) {
     ctx.fillText('Mouse X: ' + gbl_mouseX.toString() + ' / Mouse Y: ' + gbl_mouseY.toString(), 10, 60);
     ctx.fillText('Particle count: ' + gbl_listX.length.toString(), 10, 80);
     ctx.fillText('Elapsed time: ' + timeDiff().toString(), 10, 100);
-    ctx.fillText('Mouse Down: ' + gbl_mouseDown, 10, 120);
-    ctx.fillText('Window size: ' + gbl_canvasWidth + 'W x ' + gbl_canvasHeight + 'H', 10, 140);
+    ctx.fillText('Window size: ' + gbl_canvasWidth + 'W x ' + gbl_canvasHeight + 'H', 10, 120);
+}
+function drawTextExplain() {
+    ctx.fillStyle = 'lightgray';
+    var left = gbl_canvasWidth - 300;
+    var top = gbl_canvasHeight - 90;
+    ctx.fillRect(left, top, 300, 90);
+    ctx.fillStyle = 'black';
+    ctx.font = 'bold 16px Arial, sans-serif';
+    ctx.fillText('What is this?', left + 10, top + 20);
+    ctx.font = '14px Arial, sans-serif';
+    ctx.fillText('a test of various canvas drawing techniques,', left + 10, top + 40);
+    ctx.fillText('with the goal of a constant high framerate,', left + 10, top + 60);
+    ctx.fillText('using Typescript as the language', left + 10, top + 80);
+}
+function drawBartText() {
+    ctx.fillStyle = 'dodgerblue';
+    ctx.fillRect(0, 150, 280, 40);
+    ctx.fillStyle = 'white';
+    ctx.font = '14px Arial, sans-serif';
+    ctx.fillText('Move Bart using the arrow keys or WASD', 10, 164);
+    ctx.fillText('Left-click mouse button to kill Bart', 10, 184);
+}
+function drawScreenSizeText() {
+    ctx.fillStyle = 'mediumseagreen';
+    ctx.fillRect(0, 200, 280, 20);
+    ctx.fillStyle = 'white';
+    ctx.font = '14px Arial, sans-serif';
+    ctx.fillText('Try pressing "F11" to enter full screen', 10, 214);
 }
 function drawCrosshairs() {
     var x = gbl_mouseX;

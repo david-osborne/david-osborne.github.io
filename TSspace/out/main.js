@@ -89,8 +89,10 @@ function generateCanvas() {
 function clearCanvas() {
     //clear canvas
     //ctx.clearRect(0, 0, gbl_canvasWidth, gbl_canvasHeight);
+    ctx.globalAlpha = 0.1;
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, gbl_canvasWidth, gbl_canvasHeight);
+    ctx.globalAlpha = 1.0;
 }
 function generateArrays() {
     /*
@@ -113,6 +115,7 @@ function generateArrays() {
             gbl_listY.splice(i, 1);
             gbl_listR.splice(i, 1);
             gbl_listA.splice(i, 1);
+            gbl_listT.splice(i, 1);
         }
     }
     //generate randoms
@@ -125,17 +128,40 @@ function generateArrays() {
     gbl_listY.push(gbl_canvasHeight / 2);
     gbl_listR.push(randomR);
     gbl_listA.push(randomA);
+    gbl_listT.push(1);
 }
 function draw() {
     //draw particle for each array item
     for (var i = 0; i < gbl_listX.length; i++) {
         ctx.fillStyle = 'white';
+        ctx.globalAlpha = 0;
+        var x = 40;
+        if (gbl_listT[i] > x)
+            ctx.globalAlpha = 0.1;
+        if (gbl_listT[i] > x * 1.2)
+            ctx.globalAlpha = 0.2;
+        if (gbl_listT[i] > x * 1.4)
+            ctx.globalAlpha = 0.3;
+        if (gbl_listT[i] > x * 1.6)
+            ctx.globalAlpha = 0.4;
+        if (gbl_listT[i] > x * 1.8)
+            ctx.globalAlpha = 0.5;
+        if (gbl_listT[i] > x * 2)
+            ctx.globalAlpha = 0.6;
+        if (gbl_listT[i] > x * 2.2)
+            ctx.globalAlpha = 0.7;
+        if (gbl_listT[i] > x * 2.4)
+            ctx.globalAlpha = 0.8;
+        if (gbl_listT[i] > x * 2.6)
+            ctx.globalAlpha = 0.9;
         gbl_listX[i] += Math.cos(gbl_listA[i]);
         gbl_listY[i] += Math.sin(gbl_listA[i] * 18);
         ctx.beginPath();
         ctx.arc(gbl_listX[i], gbl_listY[i], gbl_listR[i], 0, 360);
         //ctx.arc(randomX, randomY, randomR, 0, 360);
         ctx.fill();
+        gbl_listT[i]++;
+        ctx.globalAlpha = 1.0;
     }
 }
 function drawText(fps) {

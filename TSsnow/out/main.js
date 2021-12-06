@@ -1,9 +1,13 @@
-var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_particleCount = 0, gbl_timestampStart, gbl_listX = [], // x pos
-gbl_listY = [], // y pos
-gbl_listR = [], // radius
-gbl_listC = [], // color
-gbl_listA = [], // angle
-gbl_listT = []; // type
+var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_particleCount = 0, gbl_timestampStart, 
+/*
+gbl_listX: number[] = [], // x pos
+gbl_listY: number[] = [], // y pos
+gbl_listR: number[] = [], // radius
+gbl_listC: string[] = [], // color
+gbl_listA: number[] = [], // angle
+gbl_listT: number[] = [], // type
+*/
+flakes = [];
 window.onload = init;
 function init() {
     generateCanvas();
@@ -34,11 +38,13 @@ function windowSize() {
     //scaleCanvas();
     ctx.canvas.width = gbl_canvasWidth;
     ctx.canvas.height = gbl_canvasHeight;
-    gbl_listX = [];
-    gbl_listY = [];
-    gbl_listA = [];
-    gbl_listR = [];
-    gbl_listC = [];
+    /*
+        gbl_listX = [];
+        gbl_listY = [];
+        gbl_listA = [];
+        gbl_listR = [];
+        gbl_listC = [];
+        */
 }
 function backingScale(context) {
     if ('devicePixelRatio' in window) {
@@ -79,50 +85,56 @@ function clearCanvas() {
 }
 function generateArrays() {
     var randomColor = '#' + Math.random().toString(16).substr(2, 6);
+    flakes.push({
+        color: randomColor,
+        angle: randomInt(0, 360),
+        xpos: randomInt(0, gbl_canvasWidth),
+        ypos: 10,
+        radius: randomInt(2, 4),
+        opacity: Math.random() + 0.3
+    });
+    /*
     gbl_listC.push(randomColor);
     gbl_listA.push(randomInt(0, 360));
     gbl_listX.push(randomInt(0, gbl_canvasWidth));
     gbl_listY.push(10);
     gbl_listR.push(randomInt(2, 4));
-    gbl_listT.push(Math.random() + 0.3);
+    gbl_listT.push(Math.random()+0.3);
+    */
 }
 function iterateArrays() {
-    for (var index = 0; index < gbl_listY.length; index++) {
-        var element = gbl_listY[index];
-        if (element < gbl_canvasHeight) {
-            gbl_listY[index] = element + 1;
+    for (var i = 0; i < flakes.length; i++) {
+        var flake = flakes[i];
+        if (flake.ypos < gbl_canvasHeight) {
+            flake.ypos = flake.ypos + 1;
         }
     }
 }
 function cleanArrays() {
-    for (var i = 0; i < gbl_listX.length; i++) {
-        if (gbl_listY[i] >= gbl_canvasHeight - gbl_listR[i]
+    for (var i = 0; i < flakes.length; i++) {
+        var flake = flakes[i];
+        if (flake.ypos >= gbl_canvasHeight - flake.radius
             ||
-                gbl_listY[i] < 0 + gbl_listR[i]
+                flake.ypos < 0 + flake.radius
             ||
-                gbl_listX[i] > gbl_canvasWidth + gbl_listR[i]
+                flake.xpos > gbl_canvasWidth + flake.radius
             ||
-                gbl_listX[i] < 0 + gbl_listR[i]
+                flake.xpos < 0 + flake.radius
             ||
-                gbl_listR[i] == 1) {
-            gbl_listX.splice(i, 1);
-            gbl_listY.splice(i, 1);
-            gbl_listR.splice(i, 1);
-            gbl_listA.splice(i, 1);
-            gbl_listC.splice(i, 1);
-            gbl_listT.splice(i, 1);
+                flake.radius == 1) {
+            flakes.splice(i, 1);
         }
     }
 }
 function draw() {
     //draw particle for each array item
-    for (var i = 0; i < gbl_listX.length; i++) {
+    for (var i = 0; i < flakes.length; i++) {
+        var flake = flakes[i];
         //set fill color
-        var opacity = gbl_listT[i];
-        ctx.fillStyle = "rgba(255,255,255," + opacity + ")";
+        ctx.fillStyle = "rgba(255,255,255," + flake.opacity + ")";
         //draw filled circle
         ctx.beginPath();
-        ctx.arc(gbl_listX[i], gbl_listY[i], gbl_listR[i], 0, 360);
+        ctx.arc(flake.xpos, flake.ypos, flake.radius, 0, 360);
         ctx.fill();
     }
 }
@@ -140,7 +152,7 @@ function drawText(fps) {
     ctx.font = '15px Courier New';
     ctx.fillStyle = 'lime';
     ctx.fillText('Timestamp: ' + hh + ':' + mm + ':' + ss + '.' + ms, 10, 40);
-    ctx.fillText('Particle count: ' + gbl_listX.length.toString(), 10, 80);
+    ctx.fillText('Particle count: ' + flakes.length.toString(), 10, 80);
     ctx.fillText('Elapsed time: ' + timeDiff().toString(), 10, 100);
     ctx.fillText('Window size: ' + gbl_canvasWidth + 'W x ' + gbl_canvasHeight + 'H', 10, 120);
 }

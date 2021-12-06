@@ -84,6 +84,7 @@ function generateArrays() {
     gbl_listX.push(randomInt(0, gbl_canvasWidth));
     gbl_listY.push(10);
     gbl_listR.push(randomInt(2, 4));
+    gbl_listT.push(Math.random() + 0.3);
 }
 function iterateArrays() {
     for (var index = 0; index < gbl_listY.length; index++) {
@@ -109,6 +110,7 @@ function cleanArrays() {
             gbl_listR.splice(i, 1);
             gbl_listA.splice(i, 1);
             gbl_listC.splice(i, 1);
+            gbl_listT.splice(i, 1);
         }
     }
 }
@@ -116,11 +118,11 @@ function draw() {
     //draw particle for each array item
     for (var i = 0; i < gbl_listX.length; i++) {
         //set fill color
-        ctx.fillStyle = 'white';
+        var opacity = gbl_listT[i];
+        ctx.fillStyle = "rgba(255,255,255," + opacity + ")";
         //draw filled circle
         ctx.beginPath();
         ctx.arc(gbl_listX[i], gbl_listY[i], gbl_listR[i], 0, 360);
-        ctx.stroke();
         ctx.fill();
     }
 }

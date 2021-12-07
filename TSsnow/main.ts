@@ -1,13 +1,13 @@
-let gbl_canvasWidth:number = window.innerWidth,
-    gbl_canvasHeight:number = window.innerHeight,
-    cvs:any,
-    ctx:any,
-    secondsPassed:number,
-    oldTimeStamp:number,
-    fps:number = 0,
-    gbl_particleCount:number = 0,
+let gbl_canvasWidth: number = window.innerWidth,
+    gbl_canvasHeight: number = window.innerHeight,
+    cvs: any,
+    ctx: any,
+    secondsPassed: number,
+    oldTimeStamp: number,
+    fps: number = 0,
+    gbl_particleCount: number = 0,
     gbl_timestampStart: Date,
-    flakes:any[] = [];
+    flakes: any[] = [];
 
 window.onload = init;
 
@@ -16,10 +16,10 @@ function init() {
     cvs = document.getElementById('canvas');
     ctx = cvs.getContext('2d');
 
-    const startTime:Date = new Date;
+    const startTime: Date = new Date;
     gbl_timestampStart = startTime;
 
-    //createEventListeners();
+    createEventListeners();
 
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
@@ -49,7 +49,7 @@ function gameLoop(timeStamp) {
     generateArrays();
     draw();
     drawText(fps);
-    //iterateArrays();
+    iterateArrays();
     cleanArrays();
 
     // Keep requesting new frames
@@ -57,8 +57,8 @@ function gameLoop(timeStamp) {
 }
 
 function generateCanvas() {
-    const body:HTMLElement = document.getElementById('body');
-    const canvas:HTMLCanvasElement = document.createElement('canvas');
+    const body: HTMLElement = document.getElementById('body');
+    const canvas: HTMLCanvasElement = document.createElement('canvas');
     canvas.id = 'canvas';
     canvas.width = gbl_canvasWidth;
     canvas.height = gbl_canvasHeight;
@@ -69,30 +69,20 @@ function clearCanvas() {
     ctx.clearRect(0, 0, gbl_canvasWidth, gbl_canvasHeight);
 }
 
-function iterateArrays() {
-    for (let i = 0; i < flakes.length; i++) {
-        var flake:any = flakes[i];
-        if (
-            flake.ypos < gbl_canvasHeight
-        ) {
-            flake.ypos = flake.ypos + 1;
-        }
-    }
-}
-
 function generateArrays() {
-    let randomColor:string = '#' + Math.random().toString(16).substr(2, 6),
-        speedcalc:number = (Math.random() * 1) + 0.5;
+    let randomColor: string = '#' + Math.random().toString(16).substr(2, 6);
 
     flakes.push({
         color: randomColor,
-        xpos: randomInt(0, gbl_canvasWidth),
-        ypos: randomInt(0, 100),
+        posX: randomInt(0, gbl_canvasWidth),
+        posY: randomInt(0, 40),
+        xShift: randomInt(100, 200),
+        xDelta: 0,
+        xDir: randomInt(1, 3),
         radius: randomInt(2, 4),
         opacity: Math.random() + 0.3, //math random generates between 0 and 1, sets min at 0.3
-        speed: speedcalc,
-        velY: speedcalc,
-        velX: 0,
+        velY: (Math.random() * 1) + 0.5,
+        velX: (Math.random() * 1) * 0.2,
         stepSize: (Math.random()) / 30,
         step: 0
     });
@@ -101,51 +91,76 @@ function generateArrays() {
 function draw() {
     //draw particle for each array item
     for (let i = 0; i < flakes.length; i++) {
-        var flake = flakes[i], //get the flake from flakes
-            minDist = 150,
-            x2 = flake.xpos,
-            y2 = flake.ypos,
-            //dist = Math.sqrt((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y)),
-            dist = Math.sqrt((x2) * (x2) + (y2) * (y2));
+        var flake = flakes[i]; //get the flake from flakes
 
-        if (dist < minDist) {
-            var force = minDist / (dist * dist),
-                xcomp = flake.xpos / dist,
-                ycomp = flake.ypos / dist,
-                deltaV = force / 2;
-
-            flake.velX -= deltaV * xcomp;
-            flake.velY -= deltaV * ycomp;
-        }
-        else {
-            flake.velX *= .98;
-            if (flake.velY <= flake.speed)
-                flake.velY = flake.speed;
-            flake.velX += Math.cos(flake.step += .05) * flake.stepSize;
-        }
-
+        /*
         //set fill color
+        switch (flake.xDir) {
+            case 1:
+                ctx.fillStyle = 'white';
+                break;
+            case 2:
+                ctx.fillStyle = 'green';
+                break;
+            case 3:
+                ctx.fillStyle = 'blue';
+                break;
+        }
+*/
         ctx.fillStyle = "rgba(255,255,255," + flake.opacity + ")";
 
         //draw filled circle
         ctx.beginPath();
-        ctx.arc(flake.xpos, flake.ypos, flake.radius, 0, 360);
+        ctx.arc(flake.posX, flake.posY, flake.radius, 0, 360);
         ctx.fill();
+    }
+}
 
-        flake.xpos += flake.velX;
-        flake.ypos += flake.velY;
+function iterateArrays() {
+    for (let i = 0; i < flakes.length; i++) {
+        var flake = flakes[i];
+
+        flake.posY += flake.velY;
+        if (flake.xDir != 1) {
+            if (flake.xDelta < flake.xShift) {
+                switch (flake.xDir) {
+                    case 2:
+                        flake.posX += flake.velX;
+                        flake.xDelta++;
+                        break;
+                    case 3:
+                        flake.posX -= flake.velX;
+                        flake.xDelta++;
+                        break;
+                }
+            }
+            else if (flake.xDelta = flake.xShift) {
+                switch (flake.xDir) {
+                    case 2:
+                        flake.xDir = 3;
+                        flake.xDelta = 0;
+                        break;
+                    case 3:
+                        flake.xDir = 2;
+                        flake.xDelta = 0;
+                        break;
+                }
+            }
+        }
     }
 }
 
 function cleanArrays() {
     for (let i = 0; i < flakes.length; i++) {
-        var flake:any = flakes[i];
+        var flake: any = flakes[i];
         if (
-            flake.ypos >= gbl_canvasHeight - flake.radius
+            flake.posY > gbl_canvasHeight
             ||
-            flake.xpos > gbl_canvasWidth + flake.radius
-            //||
-            //flake.xpos < 0 - flake.radius
+            flake.posY < 0
+            ||
+            flake.posX > gbl_canvasWidth
+            ||
+            flake.posX < 0
         ) {
             flakes.splice(i, 1);
         }
@@ -161,10 +176,10 @@ function drawText(fps: number) {
 
     ctx.font = '24px Courier New';
     ctx.fillStyle = 'orange';
-    ctx.fillText('FPS: ' + fps, 10, gbl_canvasHeight-40);
+    ctx.fillText('FPS: ' + fps, 10, gbl_canvasHeight - 40);
     ctx.font = '15px Courier New';
     ctx.fillStyle = 'lime';
-    ctx.fillText('Particles: ' + flakes.length.toString(), 10, gbl_canvasHeight-20);
+    ctx.fillText('Particles: ' + flakes.length.toString(), 10, gbl_canvasHeight - 20);
 }
 
 function randomInt(min, max) {

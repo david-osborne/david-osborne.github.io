@@ -1,4 +1,4 @@
-var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_particleCount = 0, gbl_timestampStart, flakes = [];
+var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, gbl_particleMax = 100, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_particleCount = 0, gbl_timestampStart, flakes = [];
 window.onload = init;
 function init() {
     generateCanvas();
@@ -46,21 +46,23 @@ function clearCanvas() {
     ctx.clearRect(0, 0, gbl_canvasWidth, gbl_canvasHeight);
 }
 function generateArrays() {
-    var randomColor = '#' + Math.random().toString(16).substr(2, 6);
-    flakes.push({
-        color: randomColor,
-        posX: randomInt(0, gbl_canvasWidth),
-        posY: randomInt(0, 40),
-        xShift: randomInt(100, 200),
-        xDelta: 0,
-        xDir: randomInt(1, 3),
-        radius: randomInt(2, 4),
-        opacity: Math.random() + 0.3,
-        velY: (Math.random() * 1) + 0.5,
-        velX: (Math.random() * 1) * 0.2,
-        stepSize: (Math.random()) / 30,
-        step: 0
-    });
+    if (flakes.length < 400) {
+        var randomColor = '#' + Math.random().toString(16).substr(2, 6);
+        flakes.push({
+            color: randomColor,
+            posX: randomInt(0, gbl_canvasWidth),
+            posY: randomInt(0, 100),
+            xShift: randomInt(40, 120),
+            xDelta: 0,
+            xDir: randomInt(1, 3),
+            radius: randomInt(2, 4),
+            opacity: Math.random() + 0.3,
+            velY: randomInt(20, 80) / 100,
+            velX: randomInt(1, 10) / 100,
+            stepSize: (Math.random()) / 30,
+            step: 0
+        });
+    }
 }
 function draw() {
     //draw particle for each array item
@@ -95,11 +97,11 @@ function iterateArrays() {
             if (flake.xDelta < flake.xShift) {
                 switch (flake.xDir) {
                     case 2:
-                        flake.posX += flake.velX;
+                        flake.posX += 1 * flake.velX;
                         flake.xDelta++;
                         break;
                     case 3:
-                        flake.posX -= flake.velX;
+                        flake.posX -= 1 * flake.velX;
                         flake.xDelta++;
                         break;
                 }

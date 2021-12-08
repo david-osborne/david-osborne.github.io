@@ -1,7 +1,8 @@
-var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, gbl_particleMax = 100, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_particleCount = 0, gbl_timestampStart, flakes = [];
+var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, gbl_meltTime = 2000, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_particleCount = 0, gbl_timestampStart, flakes = [];
 window.onload = init;
 function init() {
     generateCanvas();
+    scaleCanvas();
     cvs = document.getElementById('canvas');
     ctx = cvs.getContext('2d');
     var startTime = new Date;
@@ -18,6 +19,8 @@ function windowSize() {
     gbl_canvasHeight = window.innerHeight;
     ctx.canvas.width = gbl_canvasWidth;
     ctx.canvas.height = gbl_canvasHeight;
+    scaleCanvas();
+    flakes = [];
 }
 function gameLoop(timeStamp) {
     // Calculate the number of seconds passed since the last frame
@@ -26,7 +29,8 @@ function gameLoop(timeStamp) {
     // Calculate fps
     fps = Math.round(1 / secondsPassed);
     clearCanvas();
-    generateArrays();
+    if (fps >= 60)
+        generateArrays();
     draw();
     drawText(fps);
     iterateArrays();
@@ -46,23 +50,20 @@ function clearCanvas() {
     ctx.clearRect(0, 0, gbl_canvasWidth, gbl_canvasHeight);
 }
 function generateArrays() {
-    if (flakes.length < 400) {
-        var randomColor = '#' + Math.random().toString(16).substr(2, 6);
-        flakes.push({
-            color: randomColor,
-            posX: randomInt(0, gbl_canvasWidth),
-            posY: randomInt(0, 100),
-            xShift: randomInt(40, 120),
-            xDelta: 0,
-            xDir: randomInt(1, 3),
-            radius: randomInt(2, 4),
-            opacity: Math.random() + 0.3,
-            velY: randomInt(20, 80) / 100,
-            velX: randomInt(1, 10) / 100,
-            stepSize: (Math.random()) / 30,
-            step: 0
-        });
-    }
+    var randomColor = '#' + Math.random().toString(16).substr(2, 6);
+    flakes.push({
+        color: randomColor,
+        posX: randomInt(0, gbl_canvasWidth),
+        posY: randomInt(0, (gbl_canvasHeight * 0.3)),
+        xShift: randomInt(100, 200),
+        xDelta: 0,
+        xDir: randomInt(1, 3),
+        radius: randomInt(2, 4),
+        opacity: Math.random() + 0.3,
+        velY: randomInt(3, 10) / 10,
+        velX: randomInt(1, 10) / 100,
+        meltTime: 0
+    });
 }
 function draw() {
     //draw particle for each array item
@@ -92,32 +93,37 @@ function draw() {
 function iterateArrays() {
     for (var i = 0; i < flakes.length; i++) {
         var flake = flakes[i];
-        flake.posY += flake.velY;
-        if (flake.xDir != 1) {
-            if (flake.xDelta < flake.xShift) {
-                switch (flake.xDir) {
-                    case 2:
-                        flake.posX += 1 * flake.velX;
-                        flake.xDelta++;
-                        break;
-                    case 3:
-                        flake.posX -= 1 * flake.velX;
-                        flake.xDelta++;
-                        break;
+        if (flake.posY < (gbl_canvasHeight - flake.radius)) {
+            flake.posY += flake.velY;
+            if (flake.xDir != 1) {
+                if (flake.xDelta < flake.xShift) {
+                    switch (flake.xDir) {
+                        case 2:
+                            flake.posX += flake.velX;
+                            flake.xDelta++;
+                            break;
+                        case 3:
+                            flake.posX -= flake.velX;
+                            flake.xDelta++;
+                            break;
+                    }
+                }
+                else if (flake.xDelta = flake.xShift) {
+                    switch (flake.xDir) {
+                        case 2:
+                            flake.xDir = 3;
+                            flake.xDelta = 0;
+                            break;
+                        case 3:
+                            flake.xDir = 2;
+                            flake.xDelta = 0;
+                            break;
+                    }
                 }
             }
-            else if (flake.xDelta = flake.xShift) {
-                switch (flake.xDir) {
-                    case 2:
-                        flake.xDir = 3;
-                        flake.xDelta = 0;
-                        break;
-                    case 3:
-                        flake.xDir = 2;
-                        flake.xDelta = 0;
-                        break;
-                }
-            }
+        }
+        else {
+            flake.meltTime++;
         }
     }
 }
@@ -130,7 +136,9 @@ function cleanArrays() {
             ||
                 flake.posX > gbl_canvasWidth
             ||
-                flake.posX < 0) {
+                flake.posX < 0
+            ||
+                flake.meltTime >= gbl_meltTime) {
             flakes.splice(i, 1);
         }
     }
@@ -142,13 +150,30 @@ function drawText(fps) {
     var ss = d.getSeconds().toString();
     var ms = d.getMilliseconds().toString();
     ctx.font = '24px Courier New';
-    ctx.fillStyle = 'orange';
+    ctx.fillStyle = 'black';
     ctx.fillText('FPS: ' + fps, 10, gbl_canvasHeight - 40);
     ctx.font = '15px Courier New';
-    ctx.fillStyle = 'lime';
+    ctx.fillStyle = 'black';
     ctx.fillText('Particles: ' + flakes.length.toString(), 10, gbl_canvasHeight - 20);
 }
 function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function scaleCanvas() {
+    var scaleFactor = backingScale(ctx);
+    if (scaleFactor > 1) {
+        ctx.canvas.width = cvs.width * scaleFactor;
+        ctx.canvas.height = cvs.height * scaleFactor;
+        // update the context for the new canvas scale
+        var ctx = cvs.getContext("2d");
+    }
+}
+function backingScale(context) {
+    if ('devicePixelRatio' in window) {
+        if (window.devicePixelRatio > 1) {
+            return window.devicePixelRatio;
+        }
+    }
+    return 1;
 }
 //# sourceMappingURL=main.js.map

@@ -1,6 +1,6 @@
 let gbl_canvasWidth: number = window.innerWidth,
     gbl_canvasHeight: number = window.innerHeight,
-    gbl_particleMax: number = 100,
+    gbl_meltTime: number = 2000,
     cvs: any,
     ctx: any,
     secondsPassed: number,
@@ -14,6 +14,7 @@ window.onload = init;
 
 function init() {
     generateCanvas();
+    scaleCanvas();
     cvs = document.getElementById('canvas');
     ctx = cvs.getContext('2d');
 
@@ -36,6 +37,11 @@ function windowSize() {
 
     ctx.canvas.width = gbl_canvasWidth;
     ctx.canvas.height = gbl_canvasHeight;
+
+    scaleCanvas();
+
+
+    flakes = [];
 }
 
 function gameLoop(timeStamp) {
@@ -47,7 +53,8 @@ function gameLoop(timeStamp) {
     fps = Math.round(1 / secondsPassed);
 
     clearCanvas();
-    generateArrays();
+    if (fps >= 60)
+        generateArrays();
     draw();
     drawText(fps);
     iterateArrays();
@@ -71,24 +78,21 @@ function clearCanvas() {
 }
 
 function generateArrays() {
-    if (flakes.length < 400) {
-        let randomColor: string = '#' + Math.random().toString(16).substr(2, 6);
+    let randomColor: string = '#' + Math.random().toString(16).substr(2, 6);
 
-        flakes.push({
-            color: randomColor,
-            posX: randomInt(0, gbl_canvasWidth),
-            posY: randomInt(0, 100),
-            xShift: randomInt(40,120),
-            xDelta: 0,
-            xDir: randomInt(1, 3),
-            radius: randomInt(2, 4),
-            opacity: Math.random() + 0.3, //math random generates between 0 and 1, sets min at 0.3
-            velY: randomInt(20, 80) / 100,//(Math.random() * 1) + 0.5,
-            velX: randomInt(1, 10) / 100,
-            stepSize: (Math.random()) / 30,
-            step: 0
-        });
-    }
+    flakes.push({
+        color: randomColor,
+        posX: randomInt(0, gbl_canvasWidth),
+        posY: randomInt(0, (gbl_canvasHeight * 0.3)),
+        xShift: randomInt(100, 200),
+        xDelta: 0,
+        xDir: randomInt(1, 3),
+        radius: randomInt(2, 4),
+        opacity: Math.random() + 0.3, //math random generates between 0 and 1, sets min at 0.3
+        velY: randomInt(3, 10) / 10, //results in 0.3 to 1.0
+        velX: randomInt(1, 10) / 100, //results in 0.01 to 0.1
+        meltTime: 0
+    });
 }
 
 function draw() {
@@ -123,32 +127,38 @@ function iterateArrays() {
     for (let i = 0; i < flakes.length; i++) {
         var flake = flakes[i];
 
-        flake.posY += flake.velY;
-        if (flake.xDir != 1) {
-            if (flake.xDelta < flake.xShift) {
-                switch (flake.xDir) {
-                    case 2:
-                        flake.posX += 1 * flake.velX;
-                        flake.xDelta++;
-                        break;
-                    case 3:
-                        flake.posX -= 1 * flake.velX;
-                        flake.xDelta++;
-                        break;
+        if (flake.posY < (gbl_canvasHeight - flake.radius)) {
+            flake.posY += flake.velY;
+
+            if (flake.xDir != 1) {
+                if (flake.xDelta < flake.xShift) {
+                    switch (flake.xDir) {
+                        case 2:
+                            flake.posX += flake.velX;
+                            flake.xDelta++;
+                            break;
+                        case 3:
+                            flake.posX -= flake.velX;
+                            flake.xDelta++;
+                            break;
+                    }
+                }
+                else if (flake.xDelta = flake.xShift) {
+                    switch (flake.xDir) {
+                        case 2:
+                            flake.xDir = 3;
+                            flake.xDelta = 0;
+                            break;
+                        case 3:
+                            flake.xDir = 2;
+                            flake.xDelta = 0;
+                            break;
+                    }
                 }
             }
-            else if (flake.xDelta = flake.xShift) {
-                switch (flake.xDir) {
-                    case 2:
-                        flake.xDir = 3;
-                        flake.xDelta = 0;
-                        break;
-                    case 3:
-                        flake.xDir = 2;
-                        flake.xDelta = 0;
-                        break;
-                }
-            }
+        }
+        else {
+            flake.meltTime++;
         }
     }
 }
@@ -164,6 +174,8 @@ function cleanArrays() {
             flake.posX > gbl_canvasWidth
             ||
             flake.posX < 0
+            ||
+            flake.meltTime >= gbl_meltTime
         ) {
             flakes.splice(i, 1);
         }
@@ -178,13 +190,33 @@ function drawText(fps: number) {
     let ms = d.getMilliseconds().toString();
 
     ctx.font = '24px Courier New';
-    ctx.fillStyle = 'orange';
+    ctx.fillStyle = 'black';
     ctx.fillText('FPS: ' + fps, 10, gbl_canvasHeight - 40);
     ctx.font = '15px Courier New';
-    ctx.fillStyle = 'lime';
+    ctx.fillStyle = 'black';
     ctx.fillText('Particles: ' + flakes.length.toString(), 10, gbl_canvasHeight - 20);
 }
 
 function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function scaleCanvas() {
+    var scaleFactor = backingScale(ctx);
+
+    if (scaleFactor > 1) {
+        ctx.canvas.width = cvs.width * scaleFactor;
+        ctx.canvas.height = cvs.height * scaleFactor;
+        // update the context for the new canvas scale
+        var ctx = cvs.getContext("2d");
+    }
+}
+
+function backingScale(context) {
+    if ('devicePixelRatio' in window) {
+        if (window.devicePixelRatio > 1) {
+            return window.devicePixelRatio;
+        }
+    }
+    return 1;
 }

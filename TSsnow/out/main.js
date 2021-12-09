@@ -153,6 +153,7 @@ function drawText(fps) {
     var ss = d1.getSeconds().toString();
     var ms = d1.getMilliseconds().toString();
     var dateDiff = d2.getDate() - d1.getDate();
+    ctx.textAlign = 'left';
     ctx.font = '24px Courier New';
     ctx.fillStyle = 'black';
     ctx.fillText('FPS: ' + fps, 10, gbl_canvasHeight - 40);

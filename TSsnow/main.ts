@@ -202,6 +202,7 @@ function drawText(fps: number) {
 
     let dateDiff = d2.getDate() - d1.getDate();
 
+    ctx.textAlign = 'left';
     ctx.font = '24px Courier New';
     ctx.fillStyle = 'black';
     ctx.fillText('FPS: ' + fps, 10, gbl_canvasHeight - 40);

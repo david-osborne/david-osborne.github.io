@@ -14,7 +14,6 @@ window.onload = init;
 
 function init() {
     generateCanvas();
-    scaleCanvas();
     cvs = document.getElementById('canvas');
     ctx = cvs.getContext('2d');
 
@@ -37,9 +36,6 @@ function windowSize() {
 
     ctx.canvas.width = gbl_canvasWidth;
     ctx.canvas.height = gbl_canvasHeight;
-
-    scaleCanvas();
-
 
     flakes = [];
 }
@@ -91,7 +87,8 @@ function generateArrays() {
         opacity: Math.random() + 0.3, //math random generates between 0 and 1, sets min at 0.3
         velY: randomInt(3, 10) / 10, //results in 0.3 to 1.0
         velX: randomInt(1, 10) / 100, //results in 0.01 to 0.1
-        meltTime: 0
+        meltTime: 0,
+        type: randomInt(1, 100)
     });
 }
 
@@ -100,20 +97,6 @@ function draw() {
     for (let i = 0; i < flakes.length; i++) {
         var flake = flakes[i]; //get the flake from flakes
 
-        /*
-        //set fill color
-        switch (flake.xDir) {
-            case 1:
-                ctx.fillStyle = 'white';
-                break;
-            case 2:
-                ctx.fillStyle = 'green';
-                break;
-            case 3:
-                ctx.fillStyle = 'blue';
-                break;
-        }
-*/
         ctx.fillStyle = "rgba(255,255,255," + flake.opacity + ")";
 
         //draw filled circle
@@ -130,7 +113,12 @@ function iterateArrays() {
         if (flake.posY < (gbl_canvasHeight - flake.radius)) {
             flake.posY += flake.velY;
 
-            if (flake.xDir != 1) {
+            if (flake.type == 1) {
+                flake.posX += flake.velX + 1;
+                flake.posY += 2;
+            }
+
+            else if (flake.xDir != 1) {
                 if (flake.xDelta < flake.xShift) {
                     switch (flake.xDir) {
                         case 2:
@@ -199,24 +187,4 @@ function drawText(fps: number) {
 
 function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function scaleCanvas() {
-    var scaleFactor = backingScale(ctx);
-
-    if (scaleFactor > 1) {
-        ctx.canvas.width = cvs.width * scaleFactor;
-        ctx.canvas.height = cvs.height * scaleFactor;
-        // update the context for the new canvas scale
-        var ctx = cvs.getContext("2d");
-    }
-}
-
-function backingScale(context) {
-    if ('devicePixelRatio' in window) {
-        if (window.devicePixelRatio > 1) {
-            return window.devicePixelRatio;
-        }
-    }
-    return 1;
 }

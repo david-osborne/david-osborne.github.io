@@ -11,7 +11,8 @@ let gbl_canvasWidth: number = window.innerWidth,
     gbl_imageX: number = 0,
     gbl_imageY: number = 100,
     flakes: any[] = [],
-    image: any;
+    image: any,
+    clouds: any[] = [];
 
 window.onload = init;
 
@@ -54,9 +55,9 @@ function gameLoop(timeStamp) {
     clearCanvas();
     if (fps >= 60)
         generateArrays();
+    drawText(fps);
     drawSleigh();
     draw();
-    drawText(fps);
     iterateArrays();
     cleanArrays();
 
@@ -192,11 +193,14 @@ function cleanArrays() {
 }
 
 function drawText(fps: number) {
-    const d = new Date();
-    let hh = d.getHours().toString();
-    let mm = d.getMinutes().toString();
-    let ss = d.getSeconds().toString();
-    let ms = d.getMilliseconds().toString();
+    const d1 = new Date(),
+        d2 = new Date("12/25/2021");
+    let hh = d1.getHours().toString();
+    let mm = d1.getMinutes().toString();
+    let ss = d1.getSeconds().toString();
+    let ms = d1.getMilliseconds().toString();
+
+    let dateDiff = d2.getDate() - d1.getDate();
 
     ctx.font = '24px Courier New';
     ctx.fillStyle = 'black';
@@ -204,6 +208,14 @@ function drawText(fps: number) {
     ctx.font = '15px Courier New';
     ctx.fillStyle = 'black';
     ctx.fillText('Particles: ' + flakes.length.toString(), 10, gbl_canvasHeight - 20);
+
+    ctx.font = 'bold 64px verdana';
+    ctx.fillStyle = 'limegreen'
+    ctx.textAlign = 'center';
+    //ctx.fillText(dateDiff + ' days until Christmas', gbl_canvasWidth / 2, gbl_canvasHeight / 2);
+    ctx.strokeStyle = 'darkred';
+    ctx.lineWidth = 2;
+    ctx.strokeText(dateDiff + ' days until Christmas', gbl_canvasWidth / 2, gbl_canvasHeight / 2);
 }
 
 function randomInt(min, max) {

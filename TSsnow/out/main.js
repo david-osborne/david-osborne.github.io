@@ -1,4 +1,4 @@
-var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, gbl_meltTime = 2000, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_particleCount = 0, gbl_timestampStart, gbl_imageX = 0, gbl_imageY = 100, flakes = [], image;
+var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, gbl_meltTime = 2000, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_particleCount = 0, gbl_timestampStart, gbl_imageX = 0, gbl_imageY = 100, flakes = [], image, clouds = [];
 window.onload = init;
 function init() {
     generateCanvas();
@@ -29,9 +29,9 @@ function gameLoop(timeStamp) {
     clearCanvas();
     if (fps >= 60)
         generateArrays();
+    drawText(fps);
     drawSleigh();
     draw();
-    drawText(fps);
     iterateArrays();
     cleanArrays();
     // Keep requesting new frames
@@ -147,17 +147,25 @@ function cleanArrays() {
     }
 }
 function drawText(fps) {
-    var d = new Date();
-    var hh = d.getHours().toString();
-    var mm = d.getMinutes().toString();
-    var ss = d.getSeconds().toString();
-    var ms = d.getMilliseconds().toString();
+    var d1 = new Date(), d2 = new Date("12/25/2021");
+    var hh = d1.getHours().toString();
+    var mm = d1.getMinutes().toString();
+    var ss = d1.getSeconds().toString();
+    var ms = d1.getMilliseconds().toString();
+    var dateDiff = d2.getDate() - d1.getDate();
     ctx.font = '24px Courier New';
     ctx.fillStyle = 'black';
     ctx.fillText('FPS: ' + fps, 10, gbl_canvasHeight - 40);
     ctx.font = '15px Courier New';
     ctx.fillStyle = 'black';
     ctx.fillText('Particles: ' + flakes.length.toString(), 10, gbl_canvasHeight - 20);
+    ctx.font = 'bold 64px verdana';
+    ctx.fillStyle = 'limegreen';
+    ctx.textAlign = 'center';
+    //ctx.fillText(dateDiff + ' days until Christmas', gbl_canvasWidth / 2, gbl_canvasHeight / 2);
+    ctx.strokeStyle = 'darkred';
+    ctx.lineWidth = 2;
+    ctx.strokeText(dateDiff + ' days until Christmas', gbl_canvasWidth / 2, gbl_canvasHeight / 2);
 }
 function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;

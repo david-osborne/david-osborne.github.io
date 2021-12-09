@@ -11,6 +11,7 @@ html, body {
 canvas {
     cursor: none;
     
+    /*background-image: linear-gradient(bottom, rgb(105,173,212) 0%, rgb(23,82,145) 84%);*/
     background-image: linear-gradient(bottom, rgb(105,173,212) 0%, rgb(23,82,145) 84%);
     background-image: -o-linear-gradient(bottom, rgb(105,173,212) 0%, rgb(23,82,145) 84%);
     background-image: -moz-linear-gradient(bottom, rgb(105,173,212) 0%, rgb(23,82,145) 84%);

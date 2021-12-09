@@ -10,7 +10,8 @@ let gbl_canvasWidth: number = window.innerWidth,
     gbl_timestampStart: Date,
     gbl_imageX: number = 0,
     gbl_imageY: number = 100,
-    flakes: any[] = [];
+    flakes: any[] = [],
+    image: any;
 
 window.onload = init;
 
@@ -110,17 +111,20 @@ function draw() {
 }
 
 function drawSleigh() {
-    let imgSleigh = new Image(),
-        imgW = 300,
+    if (!image) {
+        let imgSleigh = new Image();
+        imgSleigh.src = 'img/sleigh.png';
+        image = imgSleigh;
+    }
+    let imgW = 300,
         imgH = 144;
-    imgSleigh.src = 'img/sleigh.png';
 
     if (gbl_imageX < gbl_canvasWidth)
         gbl_imageX++;
     else
         gbl_imageX = 0 - imgW;
 
-    ctx.drawImage(imgSleigh, gbl_imageX, gbl_imageY, imgW, imgH);
+    ctx.drawImage(image, gbl_imageX, gbl_imageY, imgW, imgH);
 }
 
 function iterateArrays() {

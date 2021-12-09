@@ -1,4 +1,4 @@
-var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, gbl_meltTime = 2000, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_particleCount = 0, gbl_timestampStart, flakes = [];
+var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, gbl_meltTime = 2000, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_particleCount = 0, gbl_timestampStart, gbl_imageX = 0, gbl_imageY = 100, flakes = [];
 window.onload = init;
 function init() {
     generateCanvas();
@@ -29,6 +29,7 @@ function gameLoop(timeStamp) {
     clearCanvas();
     if (fps >= 60)
         generateArrays();
+    drawSleigh();
     draw();
     drawText(fps);
     iterateArrays();
@@ -74,6 +75,15 @@ function draw() {
         ctx.arc(flake.posX, flake.posY, flake.radius, 0, 360);
         ctx.fill();
     }
+}
+function drawSleigh() {
+    var imgSleigh = new Image(), imgW = 300, imgH = 144;
+    imgSleigh.src = 'img/sleigh.png';
+    if (gbl_imageX < gbl_canvasWidth)
+        gbl_imageX++;
+    else
+        gbl_imageX = 0 - imgW;
+    ctx.drawImage(imgSleigh, gbl_imageX, gbl_imageY, imgW, imgH);
 }
 function iterateArrays() {
     for (var i = 0; i < flakes.length; i++) {

@@ -1,4 +1,4 @@
-var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, gbl_meltTime = 2000, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_particleCount = 0, gbl_timestampStart, gbl_imageX = 0, gbl_imageY = 100, flakes = [], image, clouds = [];
+var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, gbl_meltTime = 2000, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_particleCount = 0, gbl_timestampStart, gbl_imageX = [], gbl_imageY = [], flakes = [], image = [], clouds = [];
 window.onload = init;
 function init() {
     generateCanvas();
@@ -7,6 +7,7 @@ function init() {
     var startTime = new Date;
     gbl_timestampStart = startTime;
     createEventListeners();
+    gbl_imageX[1] = gbl_canvasWidth + 200;
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
 }
@@ -31,6 +32,7 @@ function gameLoop(timeStamp) {
         generateArrays();
     drawText(fps);
     drawSleigh();
+    drawElf();
     draw();
     iterateArrays();
     cleanArrays();
@@ -59,7 +61,7 @@ function generateArrays() {
         xDir: randomInt(1, 3),
         radius: randomInt(2, 4),
         opacity: Math.random() + 0.3,
-        velY: randomInt(3, 10) / 10,
+        velY: randomInt(5, 25) / 10,
         velX: randomInt(1, 10) / 100,
         meltTime: 0,
         type: randomInt(1, 100)
@@ -77,23 +79,39 @@ function draw() {
     }
 }
 function drawSleigh() {
-    if (!image) {
+    if (!image[0]) {
         var imgSleigh = new Image();
         imgSleigh.src = 'img/sleigh.png';
-        image = imgSleigh;
+        image[0] = imgSleigh;
     }
     var imgW = 300, imgH = 144;
-    if (gbl_imageX < gbl_canvasWidth)
-        gbl_imageX++;
+    gbl_imageY[0] = 100;
+    if (gbl_imageX[0] < gbl_canvasWidth)
+        gbl_imageX[0]++;
     else
-        gbl_imageX = 0 - imgW;
-    ctx.drawImage(image, gbl_imageX, gbl_imageY, imgW, imgH);
+        gbl_imageX[0] = 0 - imgW;
+    ctx.drawImage(image[0], gbl_imageX[0], gbl_imageY[0], imgW, imgH);
+}
+function drawElf() {
+    if (!image[1]) {
+        var imgElf = new Image();
+        imgElf.src = 'img/elf.png';
+        image[1] = imgElf;
+    }
+    var imgW = 154, imgH = 355;
+    gbl_imageY[1] = gbl_canvasHeight - (imgH / 2);
+    if (gbl_imageX[1] > (0 - imgW))
+        gbl_imageX[1] -= 1.5;
+    else
+        gbl_imageX[1] = gbl_canvasWidth;
+    ctx.drawImage(image[1], gbl_imageX[1], gbl_imageY[1], imgW, imgH);
 }
 function iterateArrays() {
     for (var i = 0; i < flakes.length; i++) {
         var flake = flakes[i];
         if (flake.posY < (gbl_canvasHeight - flake.radius)) {
             flake.posY += flake.velY;
+            //move random fast flakes
             if (flake.type == 1) {
                 flake.posX += flake.velX + 1;
                 flake.posY += 2;
@@ -153,6 +171,7 @@ function drawText(fps) {
     var ss = d1.getSeconds().toString();
     var ms = d1.getMilliseconds().toString();
     var dateDiff = d2.getDate() - d1.getDate();
+    /*
     ctx.textAlign = 'left';
     ctx.font = '24px Courier New';
     ctx.fillStyle = 'black';
@@ -160,6 +179,7 @@ function drawText(fps) {
     ctx.font = '15px Courier New';
     ctx.fillStyle = 'black';
     ctx.fillText('Particles: ' + flakes.length.toString(), 10, gbl_canvasHeight - 20);
+*/
     ctx.font = 'bold 64px verdana';
     ctx.fillStyle = 'limegreen';
     ctx.textAlign = 'center';

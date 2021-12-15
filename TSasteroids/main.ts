@@ -9,7 +9,8 @@ let gbl_canvasWidth = window.innerWidth,
     shipAngle: number = 0,
     shipPosX: number,
     shipPosY: number,
-    theGrid:any[] = [];
+    theGrid: any[] = [],
+    theGridSize: number = 200;
 
 window.onload = init;
 
@@ -25,8 +26,8 @@ function init() {
 
     createEventListeners();
 
-    shipPosX = gbl_canvasWidth / 2;
-    shipPosY = gbl_canvasHeight / 2;
+    centerShip();
+    generateGrid(theGridSize);
 
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
@@ -34,10 +35,16 @@ function init() {
 
 function createEventListeners() {
     document.addEventListener('keydown', keyDown);
+    window.addEventListener('resize', windowSize);
+}
+
+function centerShip() {
+    shipPosX = gbl_canvasWidth / 2;
+    shipPosY = gbl_canvasHeight / 2;
 }
 
 function keyDown(e) {
-    let rotateSpeed:number = 1;
+    let rotateSpeed: number = 2;
     switch (e.keyCode) {
         case 37: //left
             shipAngle -= rotateSpeed;
@@ -62,6 +69,8 @@ function windowSize() {
     //scaleCanvas();
     ctx.canvas.width = gbl_canvasWidth;
     ctx.canvas.height = gbl_canvasHeight;
+
+    centerShip();
 }
 
 function gameLoop(timeStamp) {
@@ -98,17 +107,24 @@ function clearCanvas() {
 
 function drawShip(x: number, y: number) {
 
+    //ctx.imageSmoothingEnabled = true;
+    //ctx.imageSmoothingQuality = "high";
+
+    ctx.save();
+    let rad = shipAngle * Math.PI / 180;
+    ctx.translate(x, y);
+
+    drawGrid();
+
+    ctx.rotate(rad);
+
     // set line stroke and line width
     ctx.strokeStyle = 'white';
     ctx.fillStyle = 'blue';
     ctx.lineWidth = 2;
 
-    ctx.save();
-    let rad = shipAngle * Math.PI / 180;
-    ctx.translate(x, y);
-    ctx.rotate(rad);
-    
     ctx.beginPath();
+    //ctx.translate(0.5,0.5);
     ctx.moveTo(0, -20);
     ctx.lineTo(12, 20);
     ctx.lineTo(0, 10);
@@ -116,31 +132,45 @@ function drawShip(x: number, y: number) {
     ctx.lineTo(0, -20);
     ctx.fill();
     ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(0,-20);
-    ctx.lineTo(0,-1200);
-    ctx.strokeStyle = 'magenta';
-    ctx.lineWidth=1;
-    ctx.stroke();
+    /*
+        ctx.beginPath();
+        ctx.moveTo(0, -20);
+        ctx.lineTo(0, -1200);
+        ctx.strokeStyle = 'magenta';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    */
 
     ctx.restore();
 }
 
-function drawFPS(fps:number){
+function drawFPS(fps: number) {
     ctx.textAlign = 'left';
-    ctx.font = '24px Courier New';
+    ctx.font = '14px Courier New';
     ctx.fillStyle = 'lime';
     ctx.fillText('FPS: ' + fps, 10, gbl_canvasHeight - 40);
 }
 
 
-function drawGrid(x:number, y:number, size:number) {
+function drawGrid() {
     ctx.strokeStyle = 'red';
-    theGrid.forEach(grid => {
-        ctx.beginPath();
-        ctx.rect(x, y, x+size, y+size);
-        ctx.stroke();
+    let size = theGridSize;
+
+    theGrid.forEach(element => {
+        ctx.strokeRect(element.x * size, element.y * size, size, size);
     });
-    
+
+}
+
+function generateGrid(size: number) {
+    // positive X / positive Y
+
+    for (let row = 0; row <= 10; row++) {
+        for (let column = 0; column <= 10; column++) {
+            theGrid.push({
+                x: row,
+                y: column
+            })
+        }
+    }
 }

@@ -11,6 +11,7 @@ let gbl_canvasWidth = window.innerWidth,
     shipPosY: number = 0,
     shipVx: number = 1,
     shipVy: number = 1,
+    shipDir: number = 0,  // 0 = none, 1 = up, 2 = right, 3 = down, 4 = left
     theGrid: any[] = [],
     theGridSize: number = 200,
     gridCount: number = 0,
@@ -59,24 +60,27 @@ function keyDown(e) {
             shipPosX += Math.round(shipVx);
             if (shipVx < 15)
                 shipVx *= 1.1;
+            shipDir = 4;
             break;
         case 39: //right
             //shipAngle -= rotateSpeed;
             shipPosX -= Math.round(shipVx);
             if (shipVx < 15)
                 shipVx *= 1.1;
+            shipDir = 2;
             break;
         case 38: //up
             shipPosY += Math.round(shipVy);
             if (shipVy < 15)
                 shipVy *= 1.1;
+            shipDir = 1;
             break;
         case 40: //down
             shipPosY -= Math.round(shipVy);
             if (shipVy < 15)
                 shipVy *= 1.1;
+            shipDir = 3;
             break;
-
     }
 }
 

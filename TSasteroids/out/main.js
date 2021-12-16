@@ -1,4 +1,5 @@
-var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipPosX = 0, shipPosY = 0, shipVx = 1, shipVy = 1, theGrid = [], theGridSize = 200, gridCount = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0;
+var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipPosX = 0, shipPosY = 0, shipVx = 1, shipVy = 1, shipDir = 0, // 0 = none, 1 = up, 2 = right, 3 = down, 4 = left
+theGrid = [], theGridSize = 200, gridCount = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0;
 window.onload = init;
 function init() {
     generateCanvas();
@@ -31,22 +32,26 @@ function keyDown(e) {
             shipPosX += Math.round(shipVx);
             if (shipVx < 15)
                 shipVx *= 1.1;
+            shipDir = 4;
             break;
         case 39: //right
             //shipAngle -= rotateSpeed;
             shipPosX -= Math.round(shipVx);
             if (shipVx < 15)
                 shipVx *= 1.1;
+            shipDir = 2;
             break;
         case 38: //up
             shipPosY += Math.round(shipVy);
             if (shipVy < 15)
                 shipVy *= 1.1;
+            shipDir = 1;
             break;
         case 40: //down
             shipPosY -= Math.round(shipVy);
             if (shipVy < 15)
                 shipVy *= 1.1;
+            shipDir = 3;
             break;
     }
 }

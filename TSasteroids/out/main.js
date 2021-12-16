@@ -1,4 +1,4 @@
-var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipPosX = 0, shipPosY = 0, shipVx = 1, shipVy = 1, theGrid = [], theGridSize = 100, gridCount = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0;
+var gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipPosX = 0, shipPosY = 0, shipVx = 1, shipVy = 1, theGrid = [], theGridSize = 200, gridCount = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0;
 window.onload = init;
 function init() {
     generateCanvas();
@@ -134,10 +134,10 @@ function drawFPS(fps) {
     ctx.fillText('Canvas Height: ' + gbl_canvasHeight, 10, 104);
 }
 function drawGrid() {
+    var size = theGridSize;
     ctx.strokeStyle = 'red';
     ctx.save();
-    ctx.translate((gbl_canvasWidth / 2) + shipPosX, (gbl_canvasHeight / 2) + shipPosY);
-    var size = theGridSize;
+    ctx.translate((gbl_canvasWidth / 2) + shipPosX - (size / 2), (gbl_canvasHeight / 2) + shipPosY - (size / 2));
     var index = 0;
     gridsRendered = 0;
     theGrid.forEach(function (element) {
@@ -145,22 +145,19 @@ function drawGrid() {
         //columns
         (element.x * size) + shipPosX >= ((0 - size) - (gbl_canvasWidth / 2))
             &&
-                (element.x * size) + shipPosX <= (gbl_canvasWidth / 2)
+                (element.x * size) + shipPosX <= (gbl_canvasWidth / 2) + size
             &&
                 //rows
                 (element.y * size) + shipPosY >= ((0 - size) - (gbl_canvasHeight / 2))
             &&
                 (element.y * size) + shipPosY <= (gbl_canvasHeight / 2)) {
-            /*
             ctx.strokeRect(element.x * size, element.y * size, size, size);
-                        ctx.font = 'Bold 11px Courier New';
-                        ctx.fillStyle = 'lime';
-                        ctx.fillText(element.x + '/' + element.y, element.x * size + 10, element.y * size + 14);
-                        let gridX: number = element.x * size,
-                            gridY: number = element.y * size;
-                        ctx.fillText('X: ' + gridX, element.x * size + 10, element.y * size + 26);
-                        ctx.fillText('Y: ' + gridY, element.x * size + 10, element.y * size + 36);
-                        */
+            ctx.font = 'Bold 11px Courier New';
+            ctx.fillStyle = 'lime';
+            ctx.fillText(element.x + '/' + element.y, element.x * size + 10, element.y * size + 14);
+            var gridX = element.x * size, gridY = element.y * size;
+            ctx.fillText('X: ' + gridX, element.x * size + 10, element.y * size + 26);
+            ctx.fillText('Y: ' + gridY, element.x * size + 10, element.y * size + 36);
             drawStars(theGridSize, index);
             gridsRendered++;
         }
@@ -200,16 +197,6 @@ function generateStars(size) {
     });
 }
 function drawStars(size, index) {
-    /*
-    theGrid.forEach(grid => {
-        grid.stars.forEach(star => {
-            ctx.beginPath();
-            ctx.fillStyle = 'white';
-            ctx.arc((grid.x * size) + star.starX, (grid.y * size) + star.starY, star.starR, 0, 360);
-            ctx.fill();
-        });
-    });
-*/
     theGrid[index].stars.forEach(function (star) {
         ctx.beginPath();
         ctx.fillStyle = 'white';

@@ -7,10 +7,16 @@ let gbl_canvasWidth = window.innerWidth,
     fps = 0,
     gbl_timestampStart: Date,
     shipAngle: number = 0,
-    shipPosX: number,
-    shipPosY: number,
+    shipPosX: number = 0,
+    shipPosY: number = 0,
+    shipVx: number = 1,
+    shipVy: number = 1,
     theGrid: any[] = [],
-    theGridSize: number = 200;
+    theGridSize: number = 100,
+    gridCount: number = 0,
+    gridsRendered: number = 0,
+    worldSizeX: number = 0,
+    worldSizeY: number = 0;
 
 window.onload = init;
 
@@ -28,6 +34,7 @@ function init() {
 
     centerShip();
     generateGrid(theGridSize);
+    generateStars(theGridSize);
 
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
@@ -35,31 +42,47 @@ function init() {
 
 function createEventListeners() {
     document.addEventListener('keydown', keyDown);
+    document.addEventListener('keyup', keyUp);
     window.addEventListener('resize', windowSize);
 }
 
 function centerShip() {
-    shipPosX = gbl_canvasWidth / 2;
-    shipPosY = gbl_canvasHeight / 2;
+    //shipPosX = gbl_canvasWidth / 2;
+    //shipPosY = gbl_canvasHeight / 2;
 }
 
 function keyDown(e) {
     let rotateSpeed: number = 2;
     switch (e.keyCode) {
         case 37: //left
-            shipAngle -= rotateSpeed;
+            //shipAngle += rotateSpeed;
+            shipPosX += Math.round(shipVx);
+            if (shipVx < 15)
+                shipVx *= 1.1;
             break;
         case 39: //right
-            shipAngle += rotateSpeed;
+            //shipAngle -= rotateSpeed;
+            shipPosX -= Math.round(shipVx);
+            if (shipVx < 15)
+                shipVx *= 1.1;
             break;
         case 38: //up
-            //do something
+            shipPosY += Math.round(shipVy);
+            if (shipVy < 15)
+                shipVy *= 1.1;
             break;
         case 40: //down
-            //do something
+            shipPosY -= Math.round(shipVy);
+            if (shipVy < 15)
+                shipVy *= 1.1;
             break;
 
     }
+}
+
+function keyUp(e) {
+    shipVx = 1;
+    shipVy = 1;
 }
 
 function windowSize() {
@@ -82,7 +105,8 @@ function gameLoop(timeStamp) {
     fps = Math.round(1 / secondsPassed);
 
     clearCanvas();
-    drawShip(shipPosX, shipPosY);
+    drawGrid();
+    drawShip(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
     drawFPS(fps);
 
     // Keep requesting new frames
@@ -114,8 +138,6 @@ function drawShip(x: number, y: number) {
     let rad = shipAngle * Math.PI / 180;
     ctx.translate(x, y);
 
-    drawGrid();
-
     ctx.rotate(rad);
 
     // set line stroke and line width
@@ -145,32 +167,123 @@ function drawShip(x: number, y: number) {
 }
 
 function drawFPS(fps: number) {
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, 200, 120);
+
     ctx.textAlign = 'left';
     ctx.font = '14px Courier New';
     ctx.fillStyle = 'lime';
-    ctx.fillText('FPS: ' + fps, 10, gbl_canvasHeight - 40);
+    ctx.fillText('FPS: ' + fps, 10, 20);
+    ctx.fillText('Ship Position X: ' + -shipPosX, 10, 34);
+    ctx.fillText('Ship Position Y: ' + -shipPosY, 10, 48);
+    ctx.fillText('Grid Count: ' + gridCount, 10, 62);
+    ctx.fillText('Grids Rendered: ' + gridsRendered, 10, 76);
+    ctx.fillText('Canvas Width: ' + gbl_canvasWidth, 10, 90);
+    ctx.fillText('Canvas Height: ' + gbl_canvasHeight, 10, 104);
 }
 
 
 function drawGrid() {
     ctx.strokeStyle = 'red';
+
+    ctx.save();
+    ctx.translate((gbl_canvasWidth / 2) + shipPosX, (gbl_canvasHeight / 2) + shipPosY);
+
     let size = theGridSize;
 
+    let index = 0;
+
+    gridsRendered = 0;
+
     theGrid.forEach(element => {
-        ctx.strokeRect(element.x * size, element.y * size, size, size);
+        if (
+            //columns
+            (element.x * size) + shipPosX >= ((0 - size) - (gbl_canvasWidth / 2))
+            &&
+            (element.x * size) + shipPosX <= (gbl_canvasWidth / 2)
+            &&
+            //rows
+            (element.y * size) + shipPosY >= ((0 - size) - (gbl_canvasHeight / 2))
+            &&
+            (element.y * size) + shipPosY <= (gbl_canvasHeight / 2)
+
+        ) {
+            /*
+            ctx.strokeRect(element.x * size, element.y * size, size, size);
+                        ctx.font = 'Bold 11px Courier New';
+                        ctx.fillStyle = 'lime';
+                        ctx.fillText(element.x + '/' + element.y, element.x * size + 10, element.y * size + 14);
+                        let gridX: number = element.x * size,
+                            gridY: number = element.y * size;
+                        ctx.fillText('X: ' + gridX, element.x * size + 10, element.y * size + 26);
+                        ctx.fillText('Y: ' + gridY, element.x * size + 10, element.y * size + 36);
+                        */
+            drawStars(theGridSize, index);
+            gridsRendered++;
+        }
+
+        index++;
     });
 
+
+
+    ctx.restore();
 }
 
 function generateGrid(size: number) {
     // positive X / positive Y
+    gridCount = 0;
 
-    for (let row = 0; row <= 10; row++) {
-        for (let column = 0; column <= 10; column++) {
+    let gridWidth = Math.round((gbl_canvasWidth*4) / size),
+        gridHeight = Math.round((gbl_canvasHeight*4) / size);
+
+    for (let row = -Math.round(gridHeight / 2); row < Math.round(gridHeight / 2); row++) {
+        for (let column = -Math.round(gridWidth / 2); column < Math.round(gridWidth / 2); column++) {
             theGrid.push({
-                x: row,
-                y: column
+                x: column,
+                y: row,
+                stars: []
             })
+            gridCount++;
         }
     }
+}
+
+function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateStars(size: number) {
+    theGrid.forEach(grid => {
+        let starCount = Math.sqrt(size);
+        for (let i = 0; i < starCount; i++) {
+            let starX = randomInt(0, size),
+                starY = randomInt(0, size),
+                starR = randomInt(1, 2);
+            grid.stars.push({
+                starX,
+                starY,
+                starR
+            })
+        }
+    });
+}
+
+function drawStars(size: number, index: number) {
+    /*
+    theGrid.forEach(grid => {
+        grid.stars.forEach(star => {
+            ctx.beginPath();
+            ctx.fillStyle = 'white';
+            ctx.arc((grid.x * size) + star.starX, (grid.y * size) + star.starY, star.starR, 0, 360);
+            ctx.fill();
+        });
+    });
+*/
+    theGrid[index].stars.forEach(star => {
+        ctx.beginPath();
+        ctx.fillStyle = 'white';
+        ctx.arc((theGrid[index].x * size) + star.starX, (theGrid[index].y * size) + star.starY, star.starR, 0, 360);
+        ctx.fill();
+    });
 }

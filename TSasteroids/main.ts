@@ -7,17 +7,23 @@ let gbl_canvasWidth = window.innerWidth,
     fps = 0,
     gbl_timestampStart: Date,
     shipAngle: number = 0,
-    shipPosX: number = 0,
-    shipPosY: number = 0,
-    shipVx: number = 1,
-    shipVy: number = 1,
-    shipDir: number = 0,  // 0 = none, 1 = up, 2 = right, 3 = down, 4 = left
+    shipGridRow: number = 0,
+    shipGridColumn: number = 0,
+    shipVelocityX: number = 1,
+    shipVelocityY: number = 1,
+    shipMoveRate: number = 10,
+    shipTurnRate: number = 5,
     theGrid: any[] = [],
     theGridSize: number = 200,
     gridCount: number = 0,
     gridsRendered: number = 0,
     worldSizeX: number = 0,
     worldSizeY: number = 0;
+
+let shipPosition = {
+    x: 0,
+    y: 0
+}
 
 window.onload = init;
 
@@ -33,7 +39,6 @@ function init() {
 
     createEventListeners();
 
-    centerShip();
     generateGrid(theGridSize);
     generateStars(theGridSize);
 
@@ -47,46 +52,57 @@ function createEventListeners() {
     window.addEventListener('resize', windowSize);
 }
 
-function centerShip() {
-    //shipPosX = gbl_canvasWidth / 2;
-    //shipPosY = gbl_canvasHeight / 2;
+function keyDown2(e) {
+    // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code
+    const p = document.createElement("p");
+    p.textContent = `KeyboardEvent: key='${e.key}' | code='${e.code}'`;
+    document.getElementById("output").appendChild(p);
 }
 
 function keyDown(e) {
-    let rotateSpeed: number = 2;
-    switch (e.keyCode) {
-        case 37: //left
-            //shipAngle += rotateSpeed;
-            shipPosX += Math.round(shipVx);
-            if (shipVx < 15)
-                shipVx *= 1.1;
-            shipDir = 4;
+    switch (e.code) {
+        //left
+        case "KeyA":
+        case "ArrowLeft":
+            shipAngle -= shipTurnRate;
             break;
-        case 39: //right
-            //shipAngle -= rotateSpeed;
-            shipPosX -= Math.round(shipVx);
-            if (shipVx < 15)
-                shipVx *= 1.1;
-            shipDir = 2;
+        //right
+        case "KeyD":
+        case "ArrowRight":
+            shipAngle += shipTurnRate;
             break;
-        case 38: //up
-            shipPosY += Math.round(shipVy);
-            if (shipVy < 15)
-                shipVy *= 1.1;
-            shipDir = 1;
+        //up
+        case "KeyW":
+        case "ArrowUp":
+            updatePosition(-shipMoveRate);
+            /*
+            shipPosition.y += Math.round(shipVelocityY);
+            if (shipVelocityY < shipMoveRate)
+                shipVelocityY *= 1.1;
+                */
             break;
-        case 40: //down
-            shipPosY -= Math.round(shipVy);
-            if (shipVy < 15)
-                shipVy *= 1.1;
-            shipDir = 3;
+        //down
+        case "KeyS":
+        case "ArrowDown":
+            updatePosition(shipMoveRate);
+            /*
+            shipPosition.y -= Math.round(shipVelocityY);
+            if (shipVelocityY < shipMoveRate)
+                shipVelocityY *= 1.1;
+                */
             break;
     }
 }
 
+function updatePosition(offset) {
+    let rad = shipAngle * (Math.PI / 180);
+    shipPosition.x += Math.round(Math.sin(rad) * offset);
+    shipPosition.y -= Math.round(Math.cos(rad) * offset);
+}
+
 function keyUp(e) {
-    shipVx = 1;
-    shipVy = 1;
+    shipVelocityX = 1;
+    shipVelocityY = 1;
 }
 
 function windowSize() {
@@ -96,8 +112,6 @@ function windowSize() {
     //scaleCanvas();
     ctx.canvas.width = gbl_canvasWidth;
     ctx.canvas.height = gbl_canvasHeight;
-
-    centerShip();
 }
 
 function gameLoop(timeStamp) {
@@ -171,15 +185,15 @@ function drawShip(x: number, y: number) {
 }
 
 function drawFPS(fps: number) {
-    ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, 200, 120);
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(0, 0, 200, 140);
 
     ctx.textAlign = 'left';
     ctx.font = '14px Courier New';
-    ctx.fillStyle = 'lime';
+    ctx.fillStyle = 'white';
     ctx.fillText('FPS: ' + fps, 10, 20);
-    ctx.fillText('Ship Position X: ' + -shipPosX, 10, 34);
-    ctx.fillText('Ship Position Y: ' + -shipPosY, 10, 48);
+    ctx.fillText('Ship Position X: ' + -shipPosition.x, 10, 34);
+    ctx.fillText('Ship Position Y: ' + -shipPosition.y, 10, 48);
     ctx.fillText('Grid Count: ' + gridCount, 10, 62);
     ctx.fillText('Grids Rendered: ' + gridsRendered, 10, 76);
     ctx.fillText('Canvas Width: ' + gbl_canvasWidth, 10, 90);
@@ -192,7 +206,8 @@ function drawGrid() {
     ctx.strokeStyle = 'red';
 
     ctx.save();
-    ctx.translate((gbl_canvasWidth / 2) + shipPosX - (size / 2), (gbl_canvasHeight / 2) + shipPosY - (size / 2));
+    //ctx.translate((gbl_canvasWidth / 2) + shipPosition.x - (size / 2), (gbl_canvasHeight / 2) + shipPosition.y - (size / 2)); Center ship in grid
+    ctx.translate((gbl_canvasWidth / 2) + shipPosition.x, (gbl_canvasHeight / 2) + shipPosition.y);
 
     let index = 0;
 
@@ -201,14 +216,14 @@ function drawGrid() {
     theGrid.forEach(element => {
         if (
             //columns
-            (element.x * size) + shipPosX >= ((0 - size) - (gbl_canvasWidth / 2))
+            (element.x * size) + shipPosition.x >= ((0 - size) - (gbl_canvasWidth / 2))
             &&
-            (element.x * size) + shipPosX <= (gbl_canvasWidth / 2) + size
+            (element.x * size) + shipPosition.x <= (gbl_canvasWidth / 2) + size
             &&
             //rows
-            (element.y * size) + shipPosY >= ((0 - size) - (gbl_canvasHeight / 2))
+            (element.y * size) + shipPosition.y >= ((0 - size) - (gbl_canvasHeight / 2))
             &&
-            (element.y * size) + shipPosY <= (gbl_canvasHeight / 2)
+            (element.y * size) + shipPosition.y <= (gbl_canvasHeight / 2)
 
         ) {
             ctx.strokeRect(element.x * size, element.y * size, size, size);
@@ -227,8 +242,6 @@ function drawGrid() {
         index++;
     });
 
-
-
     ctx.restore();
 }
 
@@ -236,8 +249,8 @@ function generateGrid(size: number) {
     // positive X / positive Y
     gridCount = 0;
 
-    let gridWidth = Math.round((gbl_canvasWidth * 4) / size),
-        gridHeight = Math.round((gbl_canvasHeight * 4) / size);
+    let gridWidth = Math.round((gbl_canvasWidth) / size),
+        gridHeight = Math.round((gbl_canvasHeight + size) / size);
 
     for (let row = -Math.round(gridHeight / 2); row < Math.round(gridHeight / 2); row++) {
         for (let column = -Math.round(gridWidth / 2); column < Math.round(gridWidth / 2); column++) {
@@ -249,6 +262,10 @@ function generateGrid(size: number) {
             gridCount++;
         }
     }
+}
+
+function gridLookup() {
+    //let found = theGrid.find(({x})=> x === 10);
 }
 
 function randomInt(min, max) {

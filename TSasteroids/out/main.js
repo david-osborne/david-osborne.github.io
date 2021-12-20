@@ -1,4 +1,4 @@
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocityX = 1, shipVelocityY = 1, shipMoveRate = 10, shipTurnRate = 5, theGrid = [], theGridSize = 200, gridCount = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipMoveRate = 20, shipTurnRate = 5, theGrid = [], theGridSize = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, shotsFired = [];
 let shipPosition = {
     x: 0,
     y: 0
@@ -43,7 +43,7 @@ function keyDown(e) {
         //up
         case "KeyW":
         case "ArrowUp":
-            updatePosition(-shipMoveRate);
+            updatePosition('forward');
             /*
             shipPosition.y += Math.round(shipVelocityY);
             if (shipVelocityY < shipMoveRate)
@@ -53,23 +53,97 @@ function keyDown(e) {
         //down
         case "KeyS":
         case "ArrowDown":
-            updatePosition(shipMoveRate);
+            updatePosition('reverse');
             /*
             shipPosition.y -= Math.round(shipVelocityY);
             if (shipVelocityY < shipMoveRate)
                 shipVelocityY *= 1.1;
                 */
             break;
+        case "Space":
+            fireShot();
+            break;
+        case "KeyG":
+            if (showGrid == true)
+                showGrid = false;
+            else if (showGrid == false)
+                showGrid = true;
+            break;
+        case "Backquote":
+            if (showStats == true)
+                showStats = false;
+            else if (showStats == false)
+                showStats = true;
+            break;
     }
 }
-function updatePosition(offset) {
+function updatePosition(direction) {
+    switch (direction) {
+        case 'forward':
+            if (shipVelocity < shipMoveRate)
+                shipVelocity += 1.3;
+            break;
+        case 'reverse':
+            if (shipVelocity > 0)
+                shipVelocity -= 0.7;
+            break;
+    }
+    /*
+        let rad = shipAngle * (Math.PI / 180);
+    
+        switch (direction) {
+            case 'forward':
+                shipPosition.x += Math.round(Math.sin(rad) * -shipVelocity);
+                shipPosition.y -= Math.round(Math.cos(rad) * -shipVelocity);
+                break;
+            case 'reverse':
+                shipPosition.x += Math.round(Math.sin(rad) * shipVelocity);
+                shipPosition.y -= Math.round(Math.cos(rad) * shipVelocity);
+                break;
+        }
+        */
+}
+function shipMovement() {
+    shipVelocity = Math.round(shipVelocity);
     let rad = shipAngle * (Math.PI / 180);
-    shipPosition.x += Math.round(Math.sin(rad) * offset);
-    shipPosition.y -= Math.round(Math.cos(rad) * offset);
+    shipPosition.x += Math.round(Math.sin(rad) * -shipVelocity);
+    shipPosition.y -= Math.round(Math.cos(rad) * -shipVelocity);
+}
+function fireShot() {
+    const startTime = new Date;
+    shotsFired.push({
+        startX: shipPosition.x,
+        startY: shipPosition.y,
+        x: shipPosition.x,
+        y: shipPosition.y,
+        angle: shipAngle,
+        duration: 0,
+        startTime: startTime
+    });
+}
+function drawShots() {
+    const currentTime = new Date;
+    shotsFired.forEach(shot => {
+        ctx.save();
+        let rad = shot.angle * (Math.PI / 180);
+        ctx.translate((gbl_canvasWidth / 2) + shot.startX, (gbl_canvasHeight / 2) + shot.startY);
+        shot.x += Math.round(Math.sin(rad) * 1);
+        shot.y -= Math.round(Math.cos(rad) * 1);
+        ctx.beginPath();
+        ctx.fillStyle = 'red';
+        ctx.arc(shot.x, shot.y, 4, 0, 360);
+        ctx.fill();
+        ctx.restore();
+        shot.duration++;
+    });
+    for (let i = 0; i < shotsFired.length; i++) {
+        if (shotsFired[i].duration >= 200) {
+            shotsFired.splice(i);
+        }
+    }
 }
 function keyUp(e) {
-    shipVelocityX = 1;
-    shipVelocityY = 1;
+    //shipVelocity = 0;
 }
 function windowSize() {
     gbl_canvasWidth = window.innerWidth;
@@ -87,7 +161,12 @@ function gameLoop(timeStamp) {
     clearCanvas();
     drawGrid();
     drawShip(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
-    drawFPS(fps);
+    shipMovement();
+    drawShots();
+    ``;
+    if (showStats)
+        drawFPS(fps);
+    drawThrottle();
     // Keep requesting new frames
     window.requestAnimationFrame(gameLoop);
 }
@@ -145,9 +224,11 @@ function drawFPS(fps) {
     ctx.fillText('Ship Position X: ' + -shipPosition.x, 10, 34);
     ctx.fillText('Ship Position Y: ' + -shipPosition.y, 10, 48);
     ctx.fillText('Grid Count: ' + gridCount, 10, 62);
-    ctx.fillText('Grids Rendered: ' + gridsRendered, 10, 76);
-    ctx.fillText('Canvas Width: ' + gbl_canvasWidth, 10, 90);
-    ctx.fillText('Canvas Height: ' + gbl_canvasHeight, 10, 104);
+    ctx.fillText('Grid Rows: ' + gridRows, 10, 76);
+    ctx.fillText('Grid Columns: ' + gridColumns, 10, 90);
+    ctx.fillText('Grids Rendered: ' + gridsRendered, 10, 104);
+    ctx.fillText('Ship velocity: ' + shipVelocity, 10, 118);
+    ctx.fillText('Show Grid: ' + showGrid, 10, 132);
 }
 function drawGrid() {
     let size = theGridSize;
@@ -168,13 +249,15 @@ function drawGrid() {
                 (element.y * size) + shipPosition.y >= ((0 - size) - (gbl_canvasHeight / 2))
             &&
                 (element.y * size) + shipPosition.y <= (gbl_canvasHeight / 2)) {
-            ctx.strokeRect(element.x * size, element.y * size, size, size);
-            ctx.font = 'Bold 11px Courier New';
-            ctx.fillStyle = 'lime';
-            ctx.fillText(element.x + '/' + element.y, element.x * size + 10, element.y * size + 14);
-            let gridX = element.x * size, gridY = element.y * size;
-            ctx.fillText('X: ' + gridX, element.x * size + 10, element.y * size + 26);
-            ctx.fillText('Y: ' + gridY, element.x * size + 10, element.y * size + 36);
+            if (showGrid == true) {
+                ctx.strokeRect(element.x * size, element.y * size, size, size);
+                ctx.font = 'Bold 11px Courier New';
+                ctx.fillStyle = 'lime';
+                ctx.fillText(element.x + '/' + element.y, element.x * size + 10, element.y * size + 14);
+                let gridX = element.x * size, gridY = element.y * size;
+                ctx.fillText('X: ' + gridX, element.x * size + 10, element.y * size + 26);
+                ctx.fillText('Y: ' + gridY, element.x * size + 10, element.y * size + 36);
+            }
             drawStars(theGridSize, index);
             gridsRendered++;
         }
@@ -185,17 +268,20 @@ function drawGrid() {
 function generateGrid(size) {
     // positive X / positive Y
     gridCount = 0;
-    let gridWidth = Math.round((gbl_canvasWidth) / size), gridHeight = Math.round((gbl_canvasHeight + size) / size);
-    for (let row = -Math.round(gridHeight / 2); row < Math.round(gridHeight / 2); row++) {
-        for (let column = -Math.round(gridWidth / 2); column < Math.round(gridWidth / 2); column++) {
+    let gridWidth = Math.round(((gbl_canvasWidth) / size) / 2), gridHeight = Math.round(((gbl_canvasHeight + size) / size) / 2), gridMultiplier = 50;
+    for (let row = -Math.round(gridHeight * gridMultiplier); row < Math.round(gridHeight * gridMultiplier); row++) {
+        for (let column = -Math.round(gridWidth * gridMultiplier); column < Math.round(gridWidth * gridMultiplier); column++) {
             theGrid.push({
                 x: column,
                 y: row,
                 stars: []
             });
-            gridCount++;
         }
+        gridRows++;
+        gridCount++;
     }
+    gridColumns = gridWidth * 2;
+    gridCount = gridRows * gridColumns;
 }
 function gridLookup() {
     //let found = theGrid.find(({x})=> x === 10);
@@ -205,7 +291,7 @@ function randomInt(min, max) {
 }
 function generateStars(size) {
     theGrid.forEach(grid => {
-        let starCount = Math.sqrt(size);
+        let starCount = Math.sqrt(size / 4);
         for (let i = 0; i < starCount; i++) {
             let starX = randomInt(0, size), starY = randomInt(0, size), starR = randomInt(1, 2);
             grid.stars.push({
@@ -223,5 +309,15 @@ function drawStars(size, index) {
         ctx.arc((theGrid[index].x * size) + star.starX, (theGrid[index].y * size) + star.starY, star.starR, 0, 360);
         ctx.fill();
     });
+}
+function drawThrottle() {
+    let maxThrottle = shipMoveRate, currentThrottle = shipVelocity;
+    let throttlePercent = shipVelocity / shipMoveRate;
+    ctx.fillStyle = 'darkgreen';
+    ctx.strokeStyle = 'lime';
+    ctx.fillRect(gbl_canvasWidth - 40, gbl_canvasHeight - 20, 20, -100);
+    ctx.strokeRect(gbl_canvasWidth - 40, gbl_canvasHeight - 20, 20, -100);
+    ctx.fillStyle = 'lime';
+    ctx.fillRect(gbl_canvasWidth - 38, gbl_canvasHeight - 22, 16, -96 * throttlePercent);
 }
 //# sourceMappingURL=main.js.map

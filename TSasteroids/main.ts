@@ -25,9 +25,12 @@ let gbl_canvasWidth = window.innerWidth,
     showStats: boolean = false,
     shotsFired: any[] = [],
     shotVelocity: number = 5,
-    gbl_mouseX = 0,
-    gbl_mouseY = 0,
-    gbl_mouseAngle = 0;
+    shotEnabled: boolean = true,
+    shotInterval: number = 250,
+    gbl_mouseX: number = 0,
+    gbl_mouseY: number = 0,
+    gbl_mouseAngle = 0,
+    gbl_mouseDown: boolean = false;
 
 let shipPosition = {
     x: 0,
@@ -61,11 +64,18 @@ function createEventListeners() {
     window.addEventListener('resize', windowSize);
     cvs.addEventListener('mousemove', mouseMove);
     cvs.addEventListener('mousedown', mouseDown);
+    cvs.addEventListener('mouseup', mouseUp);
     cvs.addEventListener('touchstart', touchStart);
+    cvs.addEventListener('touchend', touchEnd);
 }
 
 function mouseDown() {
     fireShot();
+    gbl_mouseDown = true;
+}
+
+function mouseUp() {
+    gbl_mouseDown = false;
 }
 
 function mouseMove(e) {
@@ -78,6 +88,11 @@ function mouseMove(e) {
 
 function touchStart() {
     fireShot();
+    gbl_mouseDown = true;
+}
+
+function touchEnd() {
+    gbl_mouseDown = false;
 }
 
 function touchMove(e) {
@@ -172,16 +187,23 @@ function shipMovement() {
 }
 
 function fireShot() {
-    const startTime = new Date;
+    if (shotEnabled == true) {
+        setTimeout(shotTimer, shotInterval);
+        shotEnabled = false;
 
-    shotsFired.push({
-        x: -shipPosition.x,
-        y: -shipPosition.y,
-        angle: shipAngle,
-        duration: 0,
-        size: 3,
-        shotVelocity: shipVelocity + shotVelocity
-    });
+        shotsFired.push({
+            x: -shipPosition.x,
+            y: -shipPosition.y,
+            angle: shipAngle,
+            duration: 0,
+            size: 3,
+            shotVelocity: shipVelocity + shotVelocity
+        });
+    }
+}
+
+function shotTimer() {
+    shotEnabled = true;
 }
 
 function drawShots() {
@@ -233,6 +255,8 @@ function gameLoop(timeStamp) {
     drawGrid();
     drawShip(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
     shipMovement();
+    if (gbl_mouseDown)
+        fireShot();
     if (showStats)
         drawFPS(fps);
     drawThrottle();

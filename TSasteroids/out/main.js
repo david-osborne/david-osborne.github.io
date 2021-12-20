@@ -1,4 +1,4 @@
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipMoveRate = 10, shipTurnRate = 5, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, shotsFired = [], shotVelocity = 5, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipMoveRate = 10, shipTurnRate = 5, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, shotsFired = [], shotVelocity = 5, shotEnabled = true, shotInterval = 250, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false;
 let shipPosition = {
     x: 0,
     y: 0
@@ -23,10 +23,16 @@ function createEventListeners() {
     window.addEventListener('resize', windowSize);
     cvs.addEventListener('mousemove', mouseMove);
     cvs.addEventListener('mousedown', mouseDown);
+    cvs.addEventListener('mouseup', mouseUp);
     cvs.addEventListener('touchstart', touchStart);
+    cvs.addEventListener('touchend', touchEnd);
 }
 function mouseDown() {
     fireShot();
+    gbl_mouseDown = true;
+}
+function mouseUp() {
+    gbl_mouseDown = false;
 }
 function mouseMove(e) {
     var rect = cvs.getBoundingClientRect(); //get canvas boundries
@@ -36,6 +42,10 @@ function mouseMove(e) {
 }
 function touchStart() {
     fireShot();
+    gbl_mouseDown = true;
+}
+function touchEnd() {
+    gbl_mouseDown = false;
 }
 function touchMove(e) {
     e.preventDefault();
@@ -119,15 +129,21 @@ function shipMovement() {
     shipPosition.y -= Math.round(Math.cos(rad) * -shipVelocity);
 }
 function fireShot() {
-    const startTime = new Date;
-    shotsFired.push({
-        x: -shipPosition.x,
-        y: -shipPosition.y,
-        angle: shipAngle,
-        duration: 0,
-        size: 3,
-        shotVelocity: shipVelocity + shotVelocity
-    });
+    if (shotEnabled == true) {
+        setTimeout(shotTimer, shotInterval);
+        shotEnabled = false;
+        shotsFired.push({
+            x: -shipPosition.x,
+            y: -shipPosition.y,
+            angle: shipAngle,
+            duration: 0,
+            size: 3,
+            shotVelocity: shipVelocity + shotVelocity
+        });
+    }
+}
+function shotTimer() {
+    shotEnabled = true;
 }
 function drawShots() {
     const currentTime = new Date;
@@ -167,6 +183,8 @@ function gameLoop(timeStamp) {
     drawGrid();
     drawShip(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
     shipMovement();
+    if (gbl_mouseDown)
+        fireShot();
     if (showStats)
         drawFPS(fps);
     drawThrottle();

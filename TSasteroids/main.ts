@@ -32,7 +32,6 @@ let gbl_canvasWidth = window.innerWidth,
     gbl_mouseY: number = 0,
     gbl_mouseAngle = 0,
     gbl_mouseDown: boolean = false,
-    //flameShiftMax: number = 0,
     flameShift: number = 0,
     flameDir: number = 0;
 
@@ -48,8 +47,38 @@ function init() {
     cvs = document.getElementById('canvas');
     ctx = cvs.getContext('2d');
 
+    //welcomeMessage();
     //scaleCanvas();
+    /*
+        const startTime = new Date;
+        gbl_timestampStart = startTime;
+    
+        createEventListeners();
+    
+        generateGrid(theGridDim);
+        generateStars(theGridDim);
+    
+        setInterval(updateVelocity, 200);
+    
+        // Start the first frame request
+        window.requestAnimationFrame(gameLoop);
+        */
+       startGame();
+}
 
+function welcomeMessage() {
+    clearCanvas();
+    ctx.beginPath();
+    ctx.fillStyle = 'cyan';
+    ctx.strokeStyle = 'cyan';
+    ctx.lineWidth = 3;
+    ctx.fillRect(gbl_canvasWidth / 2 - 200, gbl_canvasHeight / 2 - 200, 400, 400);
+    ctx.stroke();
+
+
+}
+
+function startGame() {
     const startTime = new Date;
     gbl_timestampStart = startTime;
 
@@ -600,8 +629,4 @@ function drawshipThrottle() {
     ctx.font = 'Bold 16px Courier New';
     ctx.fillStyle = 'lime';
     ctx.fillText(shipThrottle + '%', gbl_canvasWidth - 20, gbl_canvasHeight - 130);
-}
-
-class rock {
-    // https://codepen.io/radu_gaspar/pen/xRgjMq?editors=1010
 }

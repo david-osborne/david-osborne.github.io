@@ -1,6 +1,4 @@
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 20, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, shotsFired = [], shotVelocity = 5, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, 
-//flameShiftMax: number = 0,
-flameShift = 0, flameDir = 0;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 20, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, shotsFired = [], shotVelocity = 5, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0;
 let shipPosition = {
     x: 0,
     y: 0
@@ -10,7 +8,34 @@ function init() {
     generateCanvas();
     cvs = document.getElementById('canvas');
     ctx = cvs.getContext('2d');
+    //welcomeMessage();
     //scaleCanvas();
+    /*
+        const startTime = new Date;
+        gbl_timestampStart = startTime;
+    
+        createEventListeners();
+    
+        generateGrid(theGridDim);
+        generateStars(theGridDim);
+    
+        setInterval(updateVelocity, 200);
+    
+        // Start the first frame request
+        window.requestAnimationFrame(gameLoop);
+        */
+    startGame();
+}
+function welcomeMessage() {
+    clearCanvas();
+    ctx.beginPath();
+    ctx.fillStyle = 'cyan';
+    ctx.strokeStyle = 'cyan';
+    ctx.lineWidth = 3;
+    ctx.fillRect(gbl_canvasWidth / 2 - 200, gbl_canvasHeight / 2 - 200, 400, 400);
+    ctx.stroke();
+}
+function startGame() {
     const startTime = new Date;
     gbl_timestampStart = startTime;
     createEventListeners();
@@ -467,7 +492,5 @@ function drawshipThrottle() {
     ctx.font = 'Bold 16px Courier New';
     ctx.fillStyle = 'lime';
     ctx.fillText(shipThrottle + '%', gbl_canvasWidth - 20, gbl_canvasHeight - 130);
-}
-class rock {
 }
 //# sourceMappingURL=main.js.map

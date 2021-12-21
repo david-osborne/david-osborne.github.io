@@ -1,4 +1,4 @@
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipMoveRate = 10, shipTurnRate = 5, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, shotsFired = [], shotVelocity = 5, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipMoveRate = 20, shipTurnRate = 5, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, shotsFired = [], shotVelocity = 5, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false;
 let shipPosition = {
     x: 0,
     y: 0
@@ -181,6 +181,7 @@ function gameLoop(timeStamp) {
     fps = Math.round(1 / secondsPassed);
     clearCanvas();
     drawGrid();
+    //drawShield();
     drawShip(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
     shipMovement();
     if (gbl_mouseDown)
@@ -235,6 +236,18 @@ function drawShip(x, y) {
         ctx.stroke();
     */
     ctx.restore();
+}
+function drawShield() {
+    ctx.beginPath();
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'red';
+    ctx.fillStyle = "rgba(0,255,255," + .2 + ")";
+    ctx.arc(gbl_canvasWidth / 2, gbl_canvasHeight / 2, 30, 0, 360);
+    ctx.fill();
+    ctx.strokeStyle = 'cyan';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
 }
 function drawFPS(fps) {
     ctx.fillStyle = 'blue';
@@ -301,7 +314,8 @@ function generateGrid(size) {
             theGrid.push({
                 x: column,
                 y: row,
-                stars: []
+                stars: [],
+                opacity: Math.random() + 0.3,
             });
         }
         gridRows++;
@@ -332,13 +346,14 @@ function generateStars(size) {
 function drawStars(size, index) {
     theGrid[index].stars.forEach(star => {
         ctx.beginPath();
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = "rgba(255,255,255," + theGrid[index].opacity + ")";
         ctx.arc((theGrid[index].x * size) + star.starX, (theGrid[index].y * size) + star.starY, star.starR, 0, 360);
         ctx.fill();
     });
 }
 function drawThrottle() {
     let throttlePercent = shipVelocity / shipMoveRate;
+    ctx.beginPath();
     ctx.fillStyle = 'darkgreen';
     ctx.strokeStyle = 'lime';
     ctx.fillRect(gbl_canvasWidth - 40, gbl_canvasHeight - 20, 20, -100);

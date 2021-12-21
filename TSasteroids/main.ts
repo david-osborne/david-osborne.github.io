@@ -10,7 +10,7 @@ let gbl_canvasWidth = window.innerWidth,
     shipGridRow: number = 0,
     shipGridColumn: number = 0,
     shipVelocity: number = 0,
-    shipMoveRate: number = 10,
+    shipMoveRate: number = 20,
     shipTurnRate: number = 5,
     theGrid: any[] = [],
     theGridDim: number = 200,
@@ -253,6 +253,7 @@ function gameLoop(timeStamp) {
 
     clearCanvas();
     drawGrid();
+    //drawShield();
     drawShip(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
     shipMovement();
     if (gbl_mouseDown)
@@ -318,6 +319,22 @@ function drawShip(x: number, y: number) {
     */
 
     ctx.restore();
+}
+
+function drawShield() {
+    ctx.beginPath();
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'red';
+    
+    ctx.fillStyle = "rgba(0,255,255," + .2 + ")";
+    ctx.arc(gbl_canvasWidth / 2, gbl_canvasHeight / 2, 30, 0, 360);
+    ctx.fill();
+
+    ctx.strokeStyle = 'cyan';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
 }
 
 function drawFPS(fps: number) {
@@ -403,7 +420,8 @@ function generateGrid(size: number) {
             theGrid.push({
                 x: column,
                 y: row,
-                stars: []
+                stars: [],
+                opacity: Math.random() + 0.3, //math random generates between 0 and 1, sets min at 0.3
             })
         }
         gridRows++;
@@ -440,7 +458,7 @@ function generateStars(size: number) {
 function drawStars(size: number, index: number) {
     theGrid[index].stars.forEach(star => {
         ctx.beginPath();
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = "rgba(255,255,255," + theGrid[index].opacity + ")";
         ctx.arc((theGrid[index].x * size) + star.starX, (theGrid[index].y * size) + star.starY, star.starR, 0, 360);
         ctx.fill();
     });
@@ -449,6 +467,7 @@ function drawStars(size: number, index: number) {
 function drawThrottle() {
     let throttlePercent = shipVelocity / shipMoveRate;
 
+    ctx.beginPath();
     ctx.fillStyle = 'darkgreen';
     ctx.strokeStyle = 'lime';
     ctx.fillRect(gbl_canvasWidth - 40, gbl_canvasHeight - 20, 20, -100);

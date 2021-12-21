@@ -1,4 +1,6 @@
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipMoveRate = 20, shipTurnRate = 5, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, shotsFired = [], shotVelocity = 5, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 20, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, shotsFired = [], shotVelocity = 5, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, 
+//flameShiftMax: number = 0,
+flameShift = 0, flameDir = 0;
 let shipPosition = {
     x: 0,
     y: 0
@@ -14,6 +16,7 @@ function init() {
     createEventListeners();
     generateGrid(theGridDim);
     generateStars(theGridDim);
+    setInterval(updateVelocity, 200);
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
 }
@@ -25,7 +28,9 @@ function createEventListeners() {
     cvs.addEventListener('mousedown', mouseDown);
     cvs.addEventListener('mouseup', mouseUp);
     cvs.addEventListener('touchstart', touchStart);
+    cvs.addEventListener('touchmove', touchMove);
     cvs.addEventListener('touchend', touchEnd);
+    document.addEventListener('wheel', wheel);
 }
 function mouseDown() {
     fireShot();
@@ -33,6 +38,13 @@ function mouseDown() {
 }
 function mouseUp() {
     gbl_mouseDown = false;
+}
+function wheel(e) {
+    //e.preventDefault(); //disable default mouse scrolling behavior
+    //let shipThrottle = shipVelocity;
+    shipThrottle += e.deltaY * -0.1;
+    //restrict shipThrottle between min and max
+    shipThrottle = Math.min(Math.max(0, shipThrottle), 100);
 }
 function mouseMove(e) {
     var rect = cvs.getBoundingClientRect(); //get canvas boundries
@@ -73,7 +85,7 @@ function setShipAngle() {
 }
 function keyDown(e) {
     switch (e.code) {
-        //left
+        //leftww
         case "KeyA":
         case "ArrowLeft":
             shipAngle -= shipTurnRate;
@@ -86,12 +98,15 @@ function keyDown(e) {
         //up
         case "KeyW":
         case "ArrowUp":
-            updatePosition('forward');
+            updateThrottle('up');
             break;
         //down
         case "KeyS":
         case "ArrowDown":
-            updatePosition('reverse');
+            updateThrottle('down');
+            break;
+        case "KeyQ":
+            updateThrottle('kill');
             break;
         case "Space":
             fireShot();
@@ -110,23 +125,31 @@ function keyDown(e) {
             break;
     }
 }
-function updatePosition(direction) {
-    switch (direction) {
-        case 'forward':
-            if (shipVelocity < shipMoveRate)
-                shipVelocity += 1.3;
-            break;
-        case 'reverse':
-            if (shipVelocity > 0)
-                shipVelocity -= 0.7;
-            break;
+function updateThrottle(action) {
+    if (action == 'up') {
+        if (shipThrottle <= 90)
+            shipThrottle += 10;
     }
+    if (action == 'down') {
+        if (shipThrottle >= 10)
+            shipThrottle -= 10;
+    }
+    if (action == 'kill') {
+        shipThrottle = 0;
+    }
+}
+function updateVelocity() {
+    let targetVelocity = (shipThrottle / 100) * shipVelocityMax;
+    if (shipVelocity < targetVelocity)
+        shipVelocity++;
+    if (shipVelocity > targetVelocity)
+        shipVelocity--;
 }
 function shipMovement() {
     shipVelocity = Math.round(shipVelocity);
     let rad = shipAngle * (Math.PI / 180);
-    shipPosition.x += Math.round(Math.sin(rad) * -shipVelocity);
-    shipPosition.y -= Math.round(Math.cos(rad) * -shipVelocity);
+    shipPosition.x += Math.sin(rad) * -shipVelocity;
+    shipPosition.y -= Math.cos(rad) * -shipVelocity;
 }
 function fireShot() {
     if (shotEnabled == true) {
@@ -137,7 +160,7 @@ function fireShot() {
             y: -shipPosition.y,
             angle: shipAngle,
             duration: 0,
-            size: 3,
+            size: 2,
             shotVelocity: shipVelocity + shotVelocity
         });
     }
@@ -152,7 +175,13 @@ function drawShots() {
         shot.x += Math.round(Math.sin(rad) * shot.shotVelocity);
         shot.y -= Math.round(Math.cos(rad) * shot.shotVelocity);
         ctx.beginPath();
-        ctx.fillStyle = 'magenta';
+        ctx.strokeStyle = 'lime';
+        ctx.fillStyle = "rgba(0,255,0," + 0.4 + ")";
+        ctx.arc(shot.x, shot.y, shot.size + 2, 0, 360);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.fillStyle = 'red';
         ctx.arc(shot.x, shot.y, shot.size, 0, 360);
         ctx.fill();
         shot.duration++;
@@ -188,7 +217,7 @@ function gameLoop(timeStamp) {
         fireShot();
     if (showStats)
         drawFPS(fps);
-    drawThrottle();
+    drawshipThrottle();
     // Keep requesting new frames
     window.requestAnimationFrame(gameLoop);
 }
@@ -214,28 +243,106 @@ function drawShip(x, y) {
     let rad = shipAngle * Math.PI / 180;
     ctx.translate(x, y);
     ctx.rotate(rad);
+    generateFlame();
+    //ship
     ctx.beginPath();
-    // set line stroke and line width
     ctx.strokeStyle = 'white';
     ctx.fillStyle = 'blue';
     ctx.lineWidth = 2;
-    //ctx.translate(0.5,0.5);
-    ctx.moveTo(0, -20);
-    ctx.lineTo(12, 20);
-    ctx.lineTo(0, 10);
-    ctx.lineTo(-12, 20);
-    ctx.lineTo(0, -20);
+    ctx.moveTo(0, -20); //nose of ship
+    ctx.lineTo(12, 20); //lower right tip
+    ctx.lineTo(0, 10); //center
+    ctx.lineTo(-12, 20); //lower left tip
+    ctx.lineTo(0, -20); //nose of ship
     ctx.fill();
     ctx.stroke();
-    /*
-        ctx.beginPath();
-        ctx.moveTo(0, -20);
-        ctx.lineTo(0, -1200);
-        ctx.strokeStyle = 'magenta';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-    */
     ctx.restore();
+}
+function generateFlame() {
+    let shipThrottlePercent = shipThrottle / 100, flameLengthMax = 500, flameOpacity = 0.8, flameColors = [
+        "rgba(3, 109, 167,",
+        "rgba(39, 196, 230,",
+        "rgba(162, 53, 65,",
+        "rgba(251, 72, 6,",
+        "rgba(231, 121, 25,",
+        "rgba(240, 169, 33,",
+        "rgba(245, 203, 40,",
+        "rgba(246, 223, 54,",
+        "rgba(253, 250, 192,",
+        "rgba(255, 253, 240,"
+    ], flameIndex = 0, flameWidth = 11;
+    if (shipThrottlePercent > 0.9) {
+        drawFlame(1.0 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
+        flameIndex++;
+    }
+    flameWidth--;
+    if (shipThrottlePercent > 0.8) {
+        drawFlame(0.9 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
+        flameIndex++;
+    }
+    flameWidth--;
+    if (shipThrottlePercent > 0.7) {
+        drawFlame(0.8 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
+        flameIndex++;
+    }
+    flameWidth--;
+    if (shipThrottlePercent > 0.6) {
+        drawFlame(0.7 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
+        flameIndex++;
+    }
+    flameWidth--;
+    if (shipThrottlePercent > 0.5) {
+        drawFlame(0.6 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
+        flameIndex++;
+    }
+    flameWidth--;
+    if (shipThrottlePercent > 0.4) {
+        drawFlame(0.5 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
+        flameIndex++;
+    }
+    flameWidth--;
+    if (shipThrottlePercent > 0.3) {
+        drawFlame(0.4 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
+        flameIndex++;
+    }
+    flameWidth--;
+    if (shipThrottlePercent > 0.2) {
+        drawFlame(0.3 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
+        flameIndex++;
+    }
+    flameWidth--;
+    if (shipThrottlePercent > 0.1) {
+        drawFlame(0.2 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
+        flameIndex++;
+    }
+    flameWidth--;
+    if (shipThrottlePercent > 0)
+        drawFlame(0.1 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
+}
+function drawFlame(flameLength, color, width) {
+    flameFlicker(3);
+    ctx.beginPath();
+    ctx.fillStyle = color;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = color;
+    ctx.strokeStyle = 'magenta';
+    ctx.lineWidth = 1;
+    ctx.moveTo(width, 9 + width);
+    ctx.quadraticCurveTo(flameShift, flameLength, -width, 9 + width);
+    ctx.lineTo(0, 10);
+    ctx.lineTo(width, 9 + width);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+}
+function flameFlicker(flameMax) {
+    if (flameDir == 0 && flameShift < flameMax)
+        flameShift++;
+    if (flameShift == flameMax)
+        flameDir = 1;
+    if (flameDir == 1)
+        flameShift--;
+    if (flameShift == -flameMax)
+        flameDir = 0;
 }
 function drawShield() {
     ctx.beginPath();
@@ -251,23 +358,19 @@ function drawShield() {
 }
 function drawFPS(fps) {
     ctx.fillStyle = 'blue';
-    ctx.fillRect(0, 0, 200, 190);
+    ctx.fillRect(0, 0, 200, 150);
     ctx.textAlign = 'left';
     ctx.font = '14px Courier New';
     ctx.fillStyle = 'white';
     ctx.fillText('FPS: ' + fps, 10, 20);
-    ctx.fillText('Ship Position X: ' + -shipPosition.x, 10, 34);
-    ctx.fillText('Ship Position Y: ' + -shipPosition.y, 10, 48);
+    ctx.fillText('Ship Position X: ' + -Math.round(shipPosition.x), 10, 34);
+    ctx.fillText('Ship Position Y: ' + -Math.round(shipPosition.y), 10, 48);
     ctx.fillText('Grid Count: ' + gridCount, 10, 62);
     ctx.fillText('Grid Rows: ' + gridRows, 10, 76);
     ctx.fillText('Grid Columns: ' + gridColumns, 10, 90);
     ctx.fillText('Grids Rendered: ' + gridsRendered, 10, 104);
     ctx.fillText('Ship velocity: ' + shipVelocity, 10, 118);
-    ctx.fillText('Show Grid: ' + showGrid, 10, 132);
-    ctx.fillText('Mouse X: ' + gbl_mouseX, 10, 146);
-    ctx.fillText('Mouse Y: ' + gbl_mouseY, 10, 160);
-    ctx.fillText('Ship Angle: ' + shipAngle, 10, 174);
-    ctx.fillText('Mouse Angle: ' + gbl_mouseAngle, 10, 188);
+    ctx.fillText('Ship Throttle: ' + shipThrottle, 10, 132);
 }
 function drawGrid() {
     let size = theGridDim;
@@ -315,7 +418,7 @@ function generateGrid(size) {
                 x: column,
                 y: row,
                 stars: [],
-                opacity: Math.random() + 0.3,
+                opacity: Math.random() + 0.3, //math random generates between 0 and 1, sets min at 0.3
             });
         }
         gridRows++;
@@ -351,14 +454,20 @@ function drawStars(size, index) {
         ctx.fill();
     });
 }
-function drawThrottle() {
-    let throttlePercent = shipVelocity / shipMoveRate;
+function drawshipThrottle() {
+    let shipThrottlePercent = shipThrottle / 100;
     ctx.beginPath();
     ctx.fillStyle = 'darkgreen';
     ctx.strokeStyle = 'lime';
     ctx.fillRect(gbl_canvasWidth - 40, gbl_canvasHeight - 20, 20, -100);
     ctx.strokeRect(gbl_canvasWidth - 40, gbl_canvasHeight - 20, 20, -100);
     ctx.fillStyle = 'lime';
-    ctx.fillRect(gbl_canvasWidth - 38, gbl_canvasHeight - 22, 16, -96 * throttlePercent);
+    ctx.fillRect(gbl_canvasWidth - 38, gbl_canvasHeight - 22, 16, -96 * shipThrottlePercent);
+    ctx.textAlign = 'right';
+    ctx.font = 'Bold 16px Courier New';
+    ctx.fillStyle = 'lime';
+    ctx.fillText(shipThrottle + '%', gbl_canvasWidth - 20, gbl_canvasHeight - 130);
+}
+class rock {
 }
 //# sourceMappingURL=main.js.map

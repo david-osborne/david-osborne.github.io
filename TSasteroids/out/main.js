@@ -1,4 +1,4 @@
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 20, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, shotsFired = [], shotVelocity = 5, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 20, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, shotsFired = [], shotVelocity = 5, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [];
 let shipPosition = {
     x: 0,
     y: 0
@@ -41,6 +41,7 @@ function startGame() {
     createEventListeners();
     generateGrid(theGridDim);
     generateStars(theGridDim);
+    generateRock(100, 100, 40);
     setInterval(updateVelocity, 200);
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
@@ -243,6 +244,7 @@ function gameLoop(timeStamp) {
     if (showStats)
         drawFPS(fps);
     drawshipThrottle();
+    drawRocks();
     // Keep requesting new frames
     window.requestAnimationFrame(gameLoop);
 }
@@ -492,5 +494,81 @@ function drawshipThrottle() {
     ctx.font = 'Bold 16px Courier New';
     ctx.fillStyle = 'lime';
     ctx.fillText(shipThrottle + '%', gbl_canvasWidth - 20, gbl_canvasHeight - 130);
+}
+function generateRock(centerX, centerY, radius) {
+    let points = [];
+    let angle = 0;
+    for (let i = 0; i < 12; i++) {
+        let distance = .9 + Math.random();
+        let x = centerX + radius * Math.cos(angle * Math.PI / 180) * distance;
+        let y = centerY + radius * Math.sin(angle * Math.PI / 180) * distance;
+        points.push({
+            x,
+            y
+        });
+        angle += 30;
+    }
+    let rotationAngle = 0;
+    rocks.push({
+        centerX,
+        centerY,
+        radius,
+        points,
+        rotationAngle
+    });
+}
+function drawRocks() {
+    rocks.forEach(rock => {
+        /*
+        for (let i = 0; i <= rock.points.length; i++) {
+            ctx.beginPath();
+            ctx.fillStyle = 'red';
+            ctx.arc(rock.points[i].x, rock.points[i].y, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.strokeStyle = 'lime';
+            ctx.lineWidth = 2;
+            ctx.moveTo(rock.points[i].x, rock.points[i].y);
+            if (i == rock.points.length - 1)
+                ctx.lineTo(rock.points[0].x, rock.points[0].y);
+            else
+                ctx.lineTo(rock.points[i + 1].x, rock.points[i + 1].y);
+            ctx.stroke();
+
+            ctx.font = 'Bold 16px Courier New';
+            ctx.fillStyle = 'lime';
+            ctx.fillText(i, rock.points[i].x + 10, rock.points[i].y - 10);
+        }
+*/
+        ctx.beginPath();
+        ctx.strokeStyle = 'lime';
+        ctx.lineWidth = 2;
+        ctx.font = 'Bold 16px Courier New';
+        ctx.fillStyle = 'lime';
+        // move to the first point
+        ctx.moveTo(rock.points[0].x, rock.points[0].y);
+        let i = 0;
+        for (i = 1; i < rock.points.length - 1; i++) {
+            var xc = (rock.points[i].x + rock.points[i + 1].x) / 2;
+            var yc = (rock.points[i].y + rock.points[i + 1].y) / 2;
+            ctx.quadraticCurveTo(rock.points[i].x, rock.points[i].y, xc, yc);
+        }
+        // curve through the last two points
+        ctx.quadraticCurveTo(rock.points[11].x, rock.points[11].y, rock.points[0].x, rock.points[0].y);
+        ctx.stroke();
+        /*
+        for (let i = 0; i < rock.points.length; i++) {
+            ctx.fillText(i, rock.points[i].x + 20, rock.points[i].y - 20);
+        }
+
+        for (let i = 0; i < rock.points.length; i++) {
+            ctx.beginPath();
+            ctx.fillStyle = 'magenta';
+            ctx.arc(rock.points[i].x, rock.points[i].y, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        */
+    });
 }
 //# sourceMappingURL=main.js.map

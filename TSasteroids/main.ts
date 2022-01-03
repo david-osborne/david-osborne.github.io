@@ -23,7 +23,7 @@ let gbl_canvasWidth = window.innerWidth,
     worldSizeX: number = 0,
     worldSizeY: number = 0,
     showGrid: boolean = false,
-    showStats: boolean = false,
+    showStats: boolean = true,
     shotsFired: any[] = [],
     shotVelocity: number = 5,
     shotEnabled: boolean = true,
@@ -48,22 +48,6 @@ function init() {
     cvs = document.getElementById('canvas');
     ctx = cvs.getContext('2d');
 
-    //welcomeMessage();
-    //scaleCanvas();
-    /*
-        const startTime = new Date;
-        gbl_timestampStart = startTime;
-    
-        createEventListeners();
-    
-        generateGrid(theGridDim);
-        generateStars(theGridDim);
-    
-        setInterval(updateVelocity, 200);
-    
-        // Start the first frame request
-        window.requestAnimationFrame(gameLoop);
-        */
     startGame();
 }
 
@@ -75,8 +59,6 @@ function welcomeMessage() {
     ctx.lineWidth = 3;
     ctx.fillRect(gbl_canvasWidth / 2 - 200, gbl_canvasHeight / 2 - 200, 400, 400);
     ctx.stroke();
-
-
 }
 
 function startGame() {
@@ -87,7 +69,7 @@ function startGame() {
 
     generateGrid(theGridDim);
     generateStars(theGridDim);
-    generateRock(100, 100, 40);
+    generateRocks(10);
 
     setInterval(updateVelocity, 200);
 
@@ -272,8 +254,8 @@ function drawShots() {
     shotsFired.forEach(shot => {
         let rad = shot.angle * (Math.PI / 180);
 
-        shot.x += Math.round(Math.sin(rad) * shot.shotVelocity);
-        shot.y -= Math.round(Math.cos(rad) * shot.shotVelocity);
+        shot.x += Math.sin(rad) * shot.shotVelocity;
+        shot.y -= Math.cos(rad) * shot.shotVelocity;
 
 
         ctx.beginPath();
@@ -330,12 +312,42 @@ function gameLoop(timeStamp) {
     if (showStats)
         drawFPS(fps);
     drawshipThrottle();
+
     drawRocks();
+
+    drawMouseCrosshairs();
 
     // Keep requesting new frames
     window.requestAnimationFrame(gameLoop);
 }
 
+function drawMouseCrosshairs() {
+    ctx.strokeStyle = 'red';
+    ctx.fillStyle = 'red';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(gbl_mouseX - 20, gbl_mouseY);
+    ctx.lineTo(gbl_mouseX - 10, gbl_mouseY);
+    ctx.moveTo(gbl_mouseX + 10, gbl_mouseY);
+    ctx.lineTo(gbl_mouseX + 20, gbl_mouseY);
+    ctx.moveTo(gbl_mouseX, gbl_mouseY - 20);
+    ctx.lineTo(gbl_mouseX, gbl_mouseY - 10);
+    ctx.moveTo(gbl_mouseX, gbl_mouseY + 10);
+    ctx.lineTo(gbl_mouseX, gbl_mouseY + 20);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(gbl_mouseX, gbl_mouseY, 10, 0, 360);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(gbl_mouseX, gbl_mouseY, 2, 0, 360);
+    ctx.fill();
+
+    ctx.textAlign = 'left';
+    ctx.font = 'Bold 12px Courier New';
+    ctx.fillStyle = 'red';
+    ctx.fillText('X: ' + gbl_mouseX, gbl_mouseX + 20, gbl_mouseY + 20);
+    ctx.fillText('Y: ' + gbl_mouseY, gbl_mouseX + 20, gbl_mouseY + 34);
+}
 function generateCanvas() {
     const body = document.getElementById('body');
     const canvas = document.createElement('canvas');
@@ -615,6 +627,11 @@ function drawStars(size: number, index: number) {
         ctx.fillStyle = "rgba(255,255,255," + theGrid[index].opacity + ")";
         ctx.arc((theGrid[index].x * size) + star.starX, (theGrid[index].y * size) + star.starY, star.starR, 0, 360);
         ctx.fill();
+
+        ctx.textAlign = 'left';
+        ctx.font = '10px Courier New';
+        ctx.fillStyle = 'yellow';
+        ctx.fillText('X: ' + Math.round((theGrid[index].x * size) + star.starX) + ' Y: ' + Math.round((theGrid[index].y * size) + star.starY), (theGrid[index].x * size) + star.starX + 4, (theGrid[index].y * size) + star.starY + 4);
     });
 }
 
@@ -634,56 +651,48 @@ function drawshipThrottle() {
     ctx.fillText(shipThrottle + '%', gbl_canvasWidth - 20, gbl_canvasHeight - 130);
 }
 
-function generateRock(centerX: number, centerY: number, radius: number) {
-    let points: any[] = [];
+function generateRocks(rockCount: number) {
+    for (let count = 0; count < rockCount; count++) {
 
-    let angle = 0;
-    for (let i = 0; i < 12; i++) {
-        let distance = .9 + Math.random();
-        let x = centerX + radius * Math.cos(angle * Math.PI / 180) * distance;
-        let y = centerY + radius * Math.sin(angle * Math.PI / 180) * distance;
-        points.push({
-            x,
-            y
+        let points: any[] = [],
+            centerX = randomInt(0, gbl_canvasWidth),
+            centerY = randomInt(0, gbl_canvasHeight),
+            radius = randomInt(10, 40),
+            rotateSpeed = Math.random();
+
+        let angle = 0;
+        for (let i = 0; i < 12; i++) {
+            let distance = .9 + Math.random();
+            let x = radius * Math.cos(angle * Math.PI / 180) * distance;
+            let y = radius * Math.sin(angle * Math.PI / 180) * distance;
+            points.push({
+                x,
+                y
+            });
+            angle += 30;
+        }
+
+        let rotationAngle = 0;
+
+        rocks.push({
+            centerX,
+            centerY,
+            radius,
+            points,
+            rotationAngle,
+            rotateSpeed
         });
-        angle += 30;
     }
-
-    let rotationAngle = 0;
-
-    rocks.push({
-        centerX,
-        centerY,
-        radius,
-        points,
-        rotationAngle
-    });
 }
 
 function drawRocks() {
     rocks.forEach(rock => {
-        /*
-        for (let i = 0; i <= rock.points.length; i++) {
-            ctx.beginPath();
-            ctx.fillStyle = 'red';
-            ctx.arc(rock.points[i].x, rock.points[i].y, 4, 0, Math.PI * 2);
-            ctx.fill();
 
-            ctx.beginPath();
-            ctx.strokeStyle = 'lime';
-            ctx.lineWidth = 2;
-            ctx.moveTo(rock.points[i].x, rock.points[i].y);
-            if (i == rock.points.length - 1)
-                ctx.lineTo(rock.points[0].x, rock.points[0].y);
-            else
-                ctx.lineTo(rock.points[i + 1].x, rock.points[i + 1].y);
-            ctx.stroke();
-
-            ctx.font = 'Bold 16px Courier New';
-            ctx.fillStyle = 'lime';
-            ctx.fillText(i, rock.points[i].x + 10, rock.points[i].y - 10);
-        }
-*/
+        ctx.save();
+        //ctx.translate(300,300);
+        ctx.translate(rock.centerX, rock.centerY);
+        let rad = (rock.rotationAngle * Math.PI / 180) * rock.rotateSpeed;
+        ctx.rotate(rad);
 
         ctx.beginPath();
         ctx.strokeStyle = 'lime';
@@ -705,17 +714,12 @@ function drawRocks() {
         ctx.quadraticCurveTo(rock.points[11].x, rock.points[11].y, rock.points[0].x, rock.points[0].y);
         ctx.stroke();
 
-        /*
-        for (let i = 0; i < rock.points.length; i++) {
-            ctx.fillText(i, rock.points[i].x + 20, rock.points[i].y - 20);
-        }
+        ctx.beginPath();
+        ctx.arc(0, 0, rock.radius, 0, 360);
+        ctx.stroke();
 
-        for (let i = 0; i < rock.points.length; i++) {
-            ctx.beginPath();
-            ctx.fillStyle = 'magenta';
-            ctx.arc(rock.points[i].x, rock.points[i].y, 4, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        */
+        ctx.restore();
+
+        rock.rotationAngle++;
     });
 }

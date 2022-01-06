@@ -313,8 +313,6 @@ function gameLoop(timeStamp) {
         drawFPS(fps);
     drawshipThrottle();
 
-    drawRocks();
-
     drawMouseCrosshairs();
 
     // Keep requesting new frames
@@ -342,11 +340,14 @@ function drawMouseCrosshairs() {
     ctx.arc(gbl_mouseX, gbl_mouseY, 2, 0, 360);
     ctx.fill();
 
+    let mousePosX = Math.round((gbl_canvasWidth / 2) - gbl_mouseX),
+        mousePosY = Math.round((gbl_canvasHeight / 2) - gbl_mouseY);
+
     ctx.textAlign = 'left';
-    ctx.font = 'Bold 12px Courier New';
+    ctx.font = 'Bold 13px Courier New';
     ctx.fillStyle = 'red';
-    ctx.fillText('X: ' + gbl_mouseX, gbl_mouseX + 20, gbl_mouseY + 20);
-    ctx.fillText('Y: ' + gbl_mouseY, gbl_mouseX + 20, gbl_mouseY + 34);
+    ctx.fillText('X: ' + -mousePosX, gbl_mouseX + 20, gbl_mouseY + 20);
+    ctx.fillText('Y: ' + -mousePosY, gbl_mouseX + 20, gbl_mouseY + 34);
 }
 function generateCanvas() {
     const body = document.getElementById('body');
@@ -570,6 +571,7 @@ function drawGrid() {
     });
 
     drawShots();
+    drawRocks();
 
     ctx.restore();
 }
@@ -605,36 +607,6 @@ function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function generateStars(size: number) {
-    theGrid.forEach(grid => {
-        let starCount = Math.sqrt(size / 4);
-        for (let i = 0; i < starCount; i++) {
-            let starX = randomInt(0, size),
-                starY = randomInt(0, size),
-                starR = randomInt(1, 2);
-            grid.stars.push({
-                starX,
-                starY,
-                starR
-            })
-        }
-    });
-}
-
-function drawStars(size: number, index: number) {
-    theGrid[index].stars.forEach(star => {
-        ctx.beginPath();
-        ctx.fillStyle = "rgba(255,255,255," + theGrid[index].opacity + ")";
-        ctx.arc((theGrid[index].x * size) + star.starX, (theGrid[index].y * size) + star.starY, star.starR, 0, 360);
-        ctx.fill();
-
-        ctx.textAlign = 'left';
-        ctx.font = '10px Courier New';
-        ctx.fillStyle = 'yellow';
-        ctx.fillText('X: ' + Math.round((theGrid[index].x * size) + star.starX) + ' Y: ' + Math.round((theGrid[index].y * size) + star.starY), (theGrid[index].x * size) + star.starX + 4, (theGrid[index].y * size) + star.starY + 4);
-    });
-}
-
 function drawshipThrottle() {
     let shipThrottlePercent = shipThrottle / 100;
 
@@ -649,6 +621,22 @@ function drawshipThrottle() {
     ctx.font = 'Bold 16px Courier New';
     ctx.fillStyle = 'lime';
     ctx.fillText(shipThrottle + '%', gbl_canvasWidth - 20, gbl_canvasHeight - 130);
+}
+
+function generateStars(size: number) {
+    theGrid.forEach(grid => {
+        let starCount = Math.sqrt(size / 4);
+        for (let i = 0; i < starCount; i++) {
+            let starX = randomInt(0, size),
+                starY = randomInt(0, size),
+                starR = randomInt(1, 2);
+            grid.stars.push({
+                starX,
+                starY,
+                starR
+            })
+        }
+    });
 }
 
 function generateRocks(rockCount: number) {
@@ -683,6 +671,22 @@ function generateRocks(rockCount: number) {
             rotateSpeed
         });
     }
+}
+
+function drawStars(size: number, index: number) {
+    theGrid[index].stars.forEach(star => {
+        ctx.beginPath();
+        ctx.fillStyle = "rgba(255,255,255," + theGrid[index].opacity + ")";
+        ctx.arc((theGrid[index].x * size) + star.starX, (theGrid[index].y * size) + star.starY, star.starR, 0, 360);
+        ctx.fill();
+
+        /*
+        ctx.textAlign = 'left';
+        ctx.font = '10px Courier New';
+        ctx.fillStyle = 'yellow';
+        ctx.fillText('X: ' + Math.round((theGrid[index].x * size) + star.starX) + ' Y: ' + Math.round((theGrid[index].y * size) + star.starY), (theGrid[index].x * size) + star.starX + 4, (theGrid[index].y * size) + star.starY + 4);
+        */
+    });
 }
 
 function drawRocks() {

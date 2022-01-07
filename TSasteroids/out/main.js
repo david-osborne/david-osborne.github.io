@@ -1,4 +1,4 @@
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 20, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = true, shotsFired = [], shotVelocity = 5, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [];
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 20, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = true, showStats = true, shotsFired = [], shotVelocity = 5, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [];
 let shipPosition = {
     x: 0,
     y: 0
@@ -25,7 +25,7 @@ function startGame() {
     createEventListeners();
     generateGrid(theGridDim);
     generateStars(theGridDim);
-    generateRocks(10);
+    generateRocks(theGridDim);
     setInterval(updateVelocity, 200);
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
@@ -219,7 +219,7 @@ function gameLoop(timeStamp) {
     // Calculate fps
     fps = Math.round(1 / secondsPassed);
     clearCanvas();
-    drawGrid();
+    drawTranslatedObjects();
     //drawShield();
     drawShip(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
     shipMovement();
@@ -252,12 +252,12 @@ function drawMouseCrosshairs() {
     ctx.beginPath();
     ctx.arc(gbl_mouseX, gbl_mouseY, 2, 0, 360);
     ctx.fill();
-    let mousePosX = Math.round((gbl_canvasWidth / 2) - gbl_mouseX), mousePosY = Math.round((gbl_canvasHeight / 2) - gbl_mouseY);
+    let mousePosX = Math.round((gbl_canvasWidth / 2) - gbl_mouseX + shipPosition.x), mousePosY = Math.round((gbl_canvasHeight / 2) - gbl_mouseY + shipPosition.y);
     ctx.textAlign = 'left';
     ctx.font = 'Bold 13px Courier New';
     ctx.fillStyle = 'red';
-    ctx.fillText('X: ' + -mousePosX, gbl_mouseX + 20, gbl_mouseY + 20);
-    ctx.fillText('Y: ' + -mousePosY, gbl_mouseX + 20, gbl_mouseY + 34);
+    ctx.fillText('X: ' + -mousePosX, gbl_mouseX + 20, gbl_mouseY - 34);
+    ctx.fillText('Y: ' + -mousePosY, gbl_mouseX + 20, gbl_mouseY - 20);
 }
 function generateCanvas() {
     const body = document.getElementById('body');
@@ -410,12 +410,18 @@ function drawFPS(fps) {
     ctx.fillText('Ship velocity: ' + shipVelocity, 10, 118);
     ctx.fillText('Ship Throttle: ' + shipThrottle, 10, 132);
 }
-function drawGrid() {
-    let size = theGridDim;
-    ctx.strokeStyle = 'red';
+function drawTranslatedObjects() {
+    // to improve performance, perform one transformation for all translated (shifted) objects
     ctx.save();
     //ctx.translate((gbl_canvasWidth / 2) + shipPosition.x - (size / 2), (gbl_canvasHeight / 2) + shipPosition.y - (size / 2)); Center ship in grid
     ctx.translate((gbl_canvasWidth / 2) + shipPosition.x, (gbl_canvasHeight / 2) + shipPosition.y);
+    // call drawing for translated (shifted) objects
+    drawGrid();
+    drawShots();
+    ctx.restore();
+}
+function drawGrid() {
+    let size = theGridDim;
     let index = 0;
     gridsRendered = 0;
     theGrid.forEach(element => {
@@ -430,22 +436,21 @@ function drawGrid() {
             &&
                 (element.y * size) + shipPosition.y <= (gbl_canvasHeight / 2)) {
             if (showGrid == true) {
+                ctx.strokeStyle = 'dimgray';
                 ctx.strokeRect(element.x * size, element.y * size, size, size);
                 ctx.font = 'Bold 11px Courier New';
-                ctx.fillStyle = 'lime';
+                ctx.fillStyle = 'cyan';
                 ctx.fillText(element.x + '/' + element.y, element.x * size + 10, element.y * size + 14);
                 let gridX = element.x * size, gridY = element.y * size;
                 ctx.fillText('X: ' + gridX, element.x * size + 10, element.y * size + 26);
                 ctx.fillText('Y: ' + gridY, element.x * size + 10, element.y * size + 36);
             }
             drawStars(theGridDim, index);
+            drawRocks(theGridDim, index);
             gridsRendered++;
         }
         index++;
     });
-    drawShots();
-    drawRocks();
-    ctx.restore();
 }
 function generateGrid(size) {
     // positive X / positive Y
@@ -457,6 +462,7 @@ function generateGrid(size) {
                 x: column,
                 y: row,
                 stars: [],
+                rocks: [],
                 opacity: Math.random() + 0.3, //math random generates between 0 and 1, sets min at 0.3
             });
         }
@@ -499,30 +505,34 @@ function generateStars(size) {
         }
     });
 }
-function generateRocks(rockCount) {
-    for (let count = 0; count < rockCount; count++) {
-        let points = [], centerX = randomInt(0, gbl_canvasWidth), centerY = randomInt(0, gbl_canvasHeight), radius = randomInt(10, 40), rotateSpeed = Math.random();
-        let angle = 0;
-        for (let i = 0; i < 12; i++) {
-            let distance = .9 + Math.random();
-            let x = radius * Math.cos(angle * Math.PI / 180) * distance;
-            let y = radius * Math.sin(angle * Math.PI / 180) * distance;
-            points.push({
-                x,
-                y
+function generateRocks(size) {
+    theGrid.forEach(grid => {
+        //for (let count = 0; count < rockCount; count++) {
+        let determine = randomInt(0, 100); //number between 0 and 1
+        if (determine >= 98) { //2% chance of a rock in a grid
+            let points = [], centerX = randomInt(0, size), centerY = randomInt(0, size), radius = randomInt(10, 40), rotateSpeed = Math.random();
+            let angle = 0;
+            for (let i = 0; i < 12; i++) {
+                let distance = .9 + Math.random();
+                let x = radius * Math.cos(angle * Math.PI / 180) * distance;
+                let y = radius * Math.sin(angle * Math.PI / 180) * distance;
+                points.push({
+                    x,
+                    y
+                });
+                angle += 30;
+            }
+            let rotationAngle = 0;
+            grid.rocks.push({
+                centerX,
+                centerY,
+                radius,
+                points,
+                rotationAngle,
+                rotateSpeed
             });
-            angle += 30;
         }
-        let rotationAngle = 0;
-        rocks.push({
-            centerX,
-            centerY,
-            radius,
-            points,
-            rotationAngle,
-            rotateSpeed
-        });
-    }
+    });
 }
 function drawStars(size, index) {
     theGrid[index].stars.forEach(star => {
@@ -538,11 +548,11 @@ function drawStars(size, index) {
         */
     });
 }
-function drawRocks() {
-    rocks.forEach(rock => {
+function drawRocks(size, index) {
+    theGrid[index].rocks.forEach(rock => {
         ctx.save();
         //ctx.translate(300,300);
-        ctx.translate(rock.centerX, rock.centerY);
+        ctx.translate(rock.centerX + theGrid[index].x * size, rock.centerY + theGrid[index].y * size);
         let rad = (rock.rotationAngle * Math.PI / 180) * rock.rotateSpeed;
         ctx.rotate(rad);
         ctx.beginPath();

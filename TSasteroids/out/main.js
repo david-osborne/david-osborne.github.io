@@ -1,4 +1,4 @@
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 20, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = true, showStats = true, shotsFired = [], shotVelocity = 5, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [];
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 20, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = true, showStats = true, shotsFired = [], shotVelocity = 2, shotDuration = 200, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [];
 let shipPosition = {
     x: 0,
     y: 0
@@ -194,10 +194,15 @@ function drawShots() {
         ctx.fillStyle = 'red';
         ctx.arc(shot.x, shot.y, shot.size, 0, 360);
         ctx.fill();
+        ctx.textAlign = 'left';
+        ctx.font = 'Bold 13px Courier New';
+        ctx.fillStyle = 'magenta';
+        ctx.fillText('X: ' + Math.round(shot.x), shot.x + 5, shot.y - 22);
+        ctx.fillText('Y: ' + Math.round(shot.y), shot.x + 5, shot.y - 8);
         shot.duration++;
     });
     for (let i = 0; i < shotsFired.length; i++) {
-        if (shotsFired[i].duration >= 100) {
+        if (shotsFired[i].duration >= shotDuration) {
             shotsFired.splice(i, 1);
         }
     }
@@ -226,7 +231,7 @@ function gameLoop(timeStamp) {
     if (gbl_mouseDown)
         fireShot();
     if (showStats)
-        drawFPS(fps);
+        drawStats(fps);
     drawshipThrottle();
     drawMouseCrosshairs();
     // Keep requesting new frames
@@ -394,21 +399,26 @@ function drawShield() {
     ctx.stroke();
     ctx.shadowBlur = 0;
 }
-function drawFPS(fps) {
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(0, 0, 200, 150);
+function gridLookup(grid) {
+    //let found = theGrid.find(({x})=> x === 10);
+    return grid.x >= shipPosition.x;
+}
+function drawStats(fps) {
+    ctx.fillStyle = 'deepskyblue';
+    ctx.fillRect(0, 0, 200, 160);
     ctx.textAlign = 'left';
     ctx.font = '14px Courier New';
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = 'black';
     ctx.fillText('FPS: ' + fps, 10, 20);
     ctx.fillText('Ship Position X: ' + -Math.round(shipPosition.x), 10, 34);
     ctx.fillText('Ship Position Y: ' + -Math.round(shipPosition.y), 10, 48);
-    ctx.fillText('Grid Count: ' + gridCount, 10, 62);
-    ctx.fillText('Grid Rows: ' + gridRows, 10, 76);
-    ctx.fillText('Grid Columns: ' + gridColumns, 10, 90);
-    ctx.fillText('Grids Rendered: ' + gridsRendered, 10, 104);
-    ctx.fillText('Ship velocity: ' + shipVelocity, 10, 118);
-    ctx.fillText('Ship Throttle: ' + shipThrottle, 10, 132);
+    ctx.fillText('Ship Grid: ' + theGrid.find(gridLookup), 10, 62);
+    ctx.fillText('Grid Count: ' + gridCount, 10, 76);
+    ctx.fillText('Grid Rows: ' + gridRows, 10, 90);
+    ctx.fillText('Grid Columns: ' + gridColumns, 10, 104);
+    ctx.fillText('Grids Rendered: ' + gridsRendered, 10, 118);
+    ctx.fillText('Ship velocity: ' + shipVelocity, 10, 132);
+    ctx.fillText('Ship Throttle: ' + shipThrottle, 10, 146);
 }
 function drawTranslatedObjects() {
     // to improve performance, perform one transformation for all translated (shifted) objects
@@ -471,9 +481,6 @@ function generateGrid(size) {
     }
     gridColumns = gridWidth;
     gridCount = gridRows * gridColumns;
-}
-function gridLookup() {
-    //let found = theGrid.find(({x})=> x === 10);
 }
 function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -570,10 +577,21 @@ function drawRocks(size, index) {
         }
         // curve through the last two points
         ctx.quadraticCurveTo(rock.points[11].x, rock.points[11].y, rock.points[0].x, rock.points[0].y);
+        ctx.strokeStyle = 'lime';
+        ctx.lineWidth = 3;
         ctx.stroke();
+        ctx.fillStyle = 'dimgray';
+        ctx.fill();
+        /* draw radius
         ctx.beginPath();
         ctx.arc(0, 0, rock.radius, 0, 360);
         ctx.stroke();
+*/
+        ctx.textAlign = 'left';
+        ctx.font = 'Bold 13px Courier New';
+        ctx.fillStyle = 'lime';
+        ctx.fillText('X: ' + Math.round(rock.centerX + (theGrid[index].x * size)), -rock.centerX, rock.centerY - 14);
+        ctx.fillText('Y: ' + Math.round(rock.centerY + (theGrid[index].y * size)), -rock.centerX, rock.centerY);
         ctx.restore();
         rock.rotationAngle++;
     });

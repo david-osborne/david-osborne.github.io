@@ -1,3 +1,5 @@
+//everytime the ship moves, update it's grid index
+
 let gbl_canvasWidth = window.innerWidth,
     gbl_canvasHeight = window.innerHeight,
     cvs,
@@ -10,12 +12,12 @@ let gbl_canvasWidth = window.innerWidth,
     shipGridRow: number = 0,
     shipGridColumn: number = 0,
     shipVelocity: number = 0,
-    shipVelocityMax: number = 20,
+    shipVelocityMax: number = 40,
     shipTurnRate: number = 5,
     shipThrottle: number = 0,
     theGrid: any[] = [],
     theGridDim: number = 200,
-    theGridSize: number = 400,
+    theGridSize: number = 4, //should be even or the grid text display will be 'borked'
     gridCount: number = 0,
     gridRows: number = 0,
     gridColumns: number = 0,
@@ -529,7 +531,7 @@ function drawStats(fps: number) {
     ctx.fillText('FPS: ' + fps, 10, 20);
     ctx.fillText('Ship Position X: ' + -Math.round(shipPosition.x), 10, 34);
     ctx.fillText('Ship Position Y: ' + -Math.round(shipPosition.y), 10, 48);
-    ctx.fillText('Ship Grid: ' + theGrid.find(gridLookup), 10, 62)
+    ctx.fillText('Ship Grid: ', 10, 62);
     ctx.fillText('Grid Count: ' + gridCount, 10, 76);
     ctx.fillText('Grid Rows: ' + gridRows, 10, 90);
     ctx.fillText('Grid Columns: ' + gridColumns, 10, 104);
@@ -577,7 +579,7 @@ function drawGrid() {
 
                 ctx.font = 'Bold 11px Courier New';
                 ctx.fillStyle = 'cyan';
-                ctx.fillText(element.x + '/' + element.y, element.x * size + 10, element.y * size + 14);
+                ctx.fillText(element.x + '/' + element.y + '[' + theGrid.indexOf(element) + ']', element.x * size + 10, element.y * size + 14);
 
                 let gridX: number = element.x * size,
                     gridY: number = element.y * size;
@@ -659,7 +661,8 @@ function generateRocks(size: number) {
         //for (let count = 0; count < rockCount; count++) {
 
         let determine = randomInt(0, 100);  //number between 0 and 1
-        if (determine >= 98) { //2% chance of a rock in a grid
+        if (determine >= 50) { //2% chance of a rock in a grid
+        //if (determine >= 98) { //2% chance of a rock in a grid
 
             let points: any[] = [],
                 centerX = randomInt(0, size),

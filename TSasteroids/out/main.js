@@ -1,4 +1,5 @@
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 20, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridSize = 400, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = true, showStats = true, shotsFired = [], shotVelocity = 2, shotDuration = 200, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [];
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 40, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridSize = 4, //should be even or the grid text display will be 'borked'
+gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = true, showStats = true, shotsFired = [], shotVelocity = 2, shotDuration = 200, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [];
 let shipPosition = {
     x: 0,
     y: 0
@@ -412,7 +413,7 @@ function drawStats(fps) {
     ctx.fillText('FPS: ' + fps, 10, 20);
     ctx.fillText('Ship Position X: ' + -Math.round(shipPosition.x), 10, 34);
     ctx.fillText('Ship Position Y: ' + -Math.round(shipPosition.y), 10, 48);
-    ctx.fillText('Ship Grid: ' + theGrid.find(gridLookup), 10, 62);
+    ctx.fillText('Ship Grid: ', 10, 62);
     ctx.fillText('Grid Count: ' + gridCount, 10, 76);
     ctx.fillText('Grid Rows: ' + gridRows, 10, 90);
     ctx.fillText('Grid Columns: ' + gridColumns, 10, 104);
@@ -450,7 +451,7 @@ function drawGrid() {
                 ctx.strokeRect(element.x * size, element.y * size, size, size);
                 ctx.font = 'Bold 11px Courier New';
                 ctx.fillStyle = 'cyan';
-                ctx.fillText(element.x + '/' + element.y, element.x * size + 10, element.y * size + 14);
+                ctx.fillText(element.x + '/' + element.y + '[' + theGrid.indexOf(element) + ']', element.x * size + 10, element.y * size + 14);
                 let gridX = element.x * size, gridY = element.y * size;
                 ctx.fillText('X: ' + gridX, element.x * size + 10, element.y * size + 26);
                 ctx.fillText('Y: ' + gridY, element.x * size + 10, element.y * size + 36);
@@ -516,7 +517,8 @@ function generateRocks(size) {
     theGrid.forEach(grid => {
         //for (let count = 0; count < rockCount; count++) {
         let determine = randomInt(0, 100); //number between 0 and 1
-        if (determine >= 98) { //2% chance of a rock in a grid
+        if (determine >= 50) { //2% chance of a rock in a grid
+            //if (determine >= 98) { //2% chance of a rock in a grid
             let points = [], centerX = randomInt(0, size), centerY = randomInt(0, size), radius = randomInt(10, 40), rotateSpeed = Math.random();
             let angle = 0;
             for (let i = 0; i < 12; i++) {

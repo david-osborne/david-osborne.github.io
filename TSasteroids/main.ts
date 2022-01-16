@@ -1,5 +1,3 @@
-//everytime the ship moves, update it's grid index
-
 let gbl_canvasWidth = window.innerWidth,
     gbl_canvasHeight = window.innerHeight,
     cvs,
@@ -12,12 +10,12 @@ let gbl_canvasWidth = window.innerWidth,
     shipGridRow: number = 0,
     shipGridColumn: number = 0,
     shipVelocity: number = 0,
-    shipVelocityMax: number = 40,
+    shipVelocityMax: number = 20,
     shipTurnRate: number = 5,
     shipThrottle: number = 0,
     theGrid: any[] = [],
     theGridDim: number = 200,
-    theGridSize: number = 4, //should be even or the grid text display will be 'borked'
+    theGridQty: number = 200,
     gridCount: number = 0,
     gridRows: number = 0,
     gridColumns: number = 0,
@@ -28,7 +26,7 @@ let gbl_canvasWidth = window.innerWidth,
     showStats: boolean = true,
     shotsFired: any[] = [],
     shotVelocity: number = 2,
-    shotDuration: number = 200,
+    shotDuration: number = 400,
     shotEnabled: boolean = true,
     shotInterval: number = 200,
     gbl_mouseX: number = 0,
@@ -37,7 +35,11 @@ let gbl_canvasWidth = window.innerWidth,
     gbl_mouseDown: boolean = false,
     flameShift: number = 0,
     flameDir: number = 0,
-    rocks: any[] = [];
+    rocks: any[] = [],
+    viewEdgeLeft: number,
+    viewEdgeRight: number,
+    viewEdgeTop: number,
+    viewEdgeBottom: number;
 
 let shipPosition = {
     x: 0,
@@ -237,11 +239,11 @@ function fireShot() {
         shotEnabled = false;
 
         shotsFired.push({
-            x: -shipPosition.x,
-            y: -shipPosition.y,
+            centerX: -shipPosition.x,
+            centerY: -shipPosition.y,
             angle: shipAngle,
             duration: 0,
-            size: 2,
+            radius: 2,
             shotVelocity: shipVelocity + shotVelocity
         });
     }
@@ -257,28 +259,33 @@ function drawShots() {
     shotsFired.forEach(shot => {
         let rad = shot.angle * (Math.PI / 180);
 
-        shot.x += Math.sin(rad) * shot.shotVelocity;
-        shot.y -= Math.cos(rad) * shot.shotVelocity;
+        shot.centerX += Math.sin(rad) * shot.shotVelocity;
+        shot.centerY -= Math.cos(rad) * shot.shotVelocity;
+
+        //console.log('X: ' + Math.round(shot.x) + ' Y: ' + Math.round(shot.y));
 
 
         ctx.beginPath();
         ctx.strokeStyle = 'lime';
         ctx.fillStyle = "rgba(0,255,0," + 0.4 + ")"
-        ctx.arc(shot.x, shot.y, shot.size + 2, 0, 360);
+        ctx.arc(shot.centerX, shot.centerY, shot.radius + 2, 0, 360);
         ctx.fill();
         ctx.stroke();
 
         ctx.beginPath();
         ctx.fillStyle = 'red';
-        ctx.arc(shot.x, shot.y, shot.size, 0, 360);
+        ctx.arc(shot.centerX, shot.centerY, shot.size, 0, 360);
         ctx.fill();
 
-        ctx.textAlign = 'left';
-        ctx.font = 'Bold 13px Courier New';
-        ctx.fillStyle = 'magenta';
-        ctx.fillText('X: ' + Math.round(shot.x), shot.x + 5, shot.y - 22);
-        ctx.fillText('Y: ' + Math.round(shot.y), shot.x + 5, shot.y - 8);
-
+        /*
+        if (showStats) {
+            ctx.textAlign = 'left';
+            ctx.font = 'Bold 13px Courier New';
+            ctx.fillStyle = 'magenta';
+            ctx.fillText('X: ' + Math.round(shot.centerX), shot.centerX + 5, shot.centerY - 22);
+            ctx.fillText('Y: ' + Math.round(shot.centerY), shot.centerX + 5, shot.centerY - 8);
+        }
+*/
         shot.duration++;
     });
 
@@ -311,8 +318,8 @@ function gameLoop(timeStamp) {
     fps = Math.round(1 / secondsPassed);
 
     clearCanvas();
+    determineViewBoundries();
     drawTranslatedObjects();
-    //drawShield();
     drawShip(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
     shipMovement();
     if (gbl_mouseDown)
@@ -323,8 +330,18 @@ function gameLoop(timeStamp) {
 
     drawMouseCrosshairs();
 
+    collisionDetection();
+
     // Keep requesting new frames
     window.requestAnimationFrame(gameLoop);
+}
+
+function determineViewBoundries() {
+    // determine bounding view box
+    viewEdgeLeft = -Math.round(shipPosition.x + (gbl_canvasWidth / 2));
+    viewEdgeRight = -Math.round(shipPosition.x - (gbl_canvasWidth / 2));
+    viewEdgeTop = -Math.round(shipPosition.y + (gbl_canvasHeight / 2));
+    viewEdgeBottom = -Math.round(shipPosition.y - (gbl_canvasHeight / 2));
 }
 
 function drawMouseCrosshairs() {
@@ -351,11 +368,13 @@ function drawMouseCrosshairs() {
     let mousePosX = Math.round((gbl_canvasWidth / 2) - gbl_mouseX + shipPosition.x),
         mousePosY = Math.round((gbl_canvasHeight / 2) - gbl_mouseY + shipPosition.y);
 
-    ctx.textAlign = 'left';
-    ctx.font = 'Bold 13px Courier New';
-    ctx.fillStyle = 'red';
-    ctx.fillText('X: ' + -mousePosX, gbl_mouseX + 20, gbl_mouseY - 34);
-    ctx.fillText('Y: ' + -mousePosY, gbl_mouseX + 20, gbl_mouseY - 20);
+    if (showStats) {
+        ctx.textAlign = 'left';
+        ctx.font = 'Bold 13px Courier New';
+        ctx.fillStyle = 'red';
+        ctx.fillText('X: ' + -mousePosX, gbl_mouseX + 20, gbl_mouseY - 34);
+        ctx.fillText('Y: ' + -mousePosY, gbl_mouseX + 20, gbl_mouseY - 20);
+    }
 }
 function generateCanvas() {
     const body = document.getElementById('body');
@@ -386,6 +405,8 @@ function drawShip(x: number, y: number) {
 
     ctx.rotate(rad);
 
+    drawShield();
+
     generateFlame();
 
     //ship
@@ -393,6 +414,7 @@ function drawShip(x: number, y: number) {
     ctx.strokeStyle = 'white';
     ctx.fillStyle = 'blue';
     ctx.lineWidth = 2;
+
     ctx.moveTo(0, -20); //nose of ship
     ctx.lineTo(12, 20); //lower right tip
     ctx.lineTo(0, 10); //center
@@ -502,18 +524,22 @@ function flameFlicker(flameMax: number) {
 
 function drawShield() {
     ctx.beginPath();
+
+    //ctx.shadowBlur = 20;
+    //ctx.shadowColor = 'yellow';
+    ctx.strokeStyle = 'yellow';
+    ctx.lineWidth = 2;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
     ctx.shadowBlur = 10;
-    ctx.shadowColor = 'red';
+    ctx.shadowColor = 'white';
 
-    ctx.fillStyle = "rgba(0,255,255," + .2 + ")";
-    ctx.arc(gbl_canvasWidth / 2, gbl_canvasHeight / 2, 30, 0, 360);
-    ctx.fill();
-
-    ctx.strokeStyle = 'cyan';
-    ctx.lineWidth = 1;
+    ctx.moveTo(-30, 20);
+    ctx.quadraticCurveTo(0, -100, 30, 20);
     ctx.stroke();
 
     ctx.shadowBlur = 0;
+
 }
 
 function gridLookup(grid) {
@@ -522,22 +548,37 @@ function gridLookup(grid) {
 }
 
 function drawStats(fps: number) {
+    let stats = [
+        'FPS: ' + fps,
+        'Ship Position X: ' + -Math.round(shipPosition.x),
+        'Ship Position Y: ' + -Math.round(shipPosition.y),
+        'Ship Grid: ' + theGrid.find(gridLookup),
+        'Grid Count: ' + gridCount,
+        'Grid Rows: ' + gridRows,
+        'Grid Columns: ' + gridColumns,
+        'Grids Rendered: ' + gridsRendered,
+        'Ship velocity: ' + shipVelocity,
+        'Ship Throttle: ' + shipThrottle,
+        'Rock Qty: ' + rocks.length,
+        'ViewEdgeLeft: ' + viewEdgeLeft,
+        'ViewEdgeRight: ' + viewEdgeRight,
+        'ViewEdgeTop: ' + viewEdgeTop,
+        'ViewEdgeBottom: ' + viewEdgeBottom
+    ];
+
+    let statsHeight = (stats.length + 1) * 14;
     ctx.fillStyle = 'deepskyblue';
-    ctx.fillRect(0, 0, 200, 160);
+    ctx.fillRect(0, 0, 200, statsHeight);
 
     ctx.textAlign = 'left';
     ctx.font = '14px Courier New';
     ctx.fillStyle = 'black';
-    ctx.fillText('FPS: ' + fps, 10, 20);
-    ctx.fillText('Ship Position X: ' + -Math.round(shipPosition.x), 10, 34);
-    ctx.fillText('Ship Position Y: ' + -Math.round(shipPosition.y), 10, 48);
-    ctx.fillText('Ship Grid: ', 10, 62);
-    ctx.fillText('Grid Count: ' + gridCount, 10, 76);
-    ctx.fillText('Grid Rows: ' + gridRows, 10, 90);
-    ctx.fillText('Grid Columns: ' + gridColumns, 10, 104);
-    ctx.fillText('Grids Rendered: ' + gridsRendered, 10, 118);
-    ctx.fillText('Ship velocity: ' + shipVelocity, 10, 132);
-    ctx.fillText('Ship Throttle: ' + shipThrottle, 10, 146);
+
+    let textY = 14;
+    stats.forEach(stat => {
+        ctx.fillText(stat, 10, textY);
+        textY += 14;
+    });
 }
 
 function drawTranslatedObjects() {
@@ -548,6 +589,7 @@ function drawTranslatedObjects() {
 
     // call drawing for translated (shifted) objects
     drawGrid();
+    drawRocks();
     drawShots();
 
     ctx.restore();
@@ -577,9 +619,10 @@ function drawGrid() {
                 ctx.strokeStyle = 'dimgray';
                 ctx.strokeRect(element.x * size, element.y * size, size, size);
 
+                ctx.textAlign = 'left';
                 ctx.font = 'Bold 11px Courier New';
                 ctx.fillStyle = 'cyan';
-                ctx.fillText(element.x + '/' + element.y + '[' + theGrid.indexOf(element) + ']', element.x * size + 10, element.y * size + 14);
+                ctx.fillText(element.x + '/' + element.y + ' [' + theGrid.indexOf(element) + ']', element.x * size + 10, element.y * size + 14);
 
                 let gridX: number = element.x * size,
                     gridY: number = element.y * size;
@@ -588,7 +631,6 @@ function drawGrid() {
             }
 
             drawStars(theGridDim, index);
-            drawRocks(theGridDim, index);
             gridsRendered++;
         }
 
@@ -600,8 +642,8 @@ function generateGrid(size: number) {
     // positive X / positive Y
     gridCount = 0;
 
-    let gridWidth = theGridSize,
-        gridHeight = theGridSize;
+    let gridWidth = theGridQty,
+        gridHeight = theGridQty;
 
     for (let row = -gridHeight / 2; row < gridHeight / 2; row++) {
         for (let column = -gridWidth / 2; column < gridWidth / 2; column++) {
@@ -609,7 +651,7 @@ function generateGrid(size: number) {
                 x: column,
                 y: row,
                 stars: [],
-                rocks: [],
+                //rocks: [],
                 opacity: Math.random() + 0.3, //math random generates between 0 and 1, sets min at 0.3
             })
         }
@@ -662,11 +704,10 @@ function generateRocks(size: number) {
 
         let determine = randomInt(0, 100);  //number between 0 and 1
         if (determine >= 50) { //2% chance of a rock in a grid
-        //if (determine >= 98) { //2% chance of a rock in a grid
 
             let points: any[] = [],
-                centerX = randomInt(0, size),
-                centerY = randomInt(0, size),
+                centerX = randomInt(0, size) + (grid.x * theGridDim),
+                centerY = randomInt(0, size) + (grid.y * theGridDim),
                 radius = randomInt(10, 40),
                 rotateSpeed = Math.random();
 
@@ -683,14 +724,16 @@ function generateRocks(size: number) {
             }
 
             let rotationAngle = 0;
+            let color = 'dimgray';
 
-            grid.rocks.push({
+            rocks.push({
                 centerX,
                 centerY,
                 radius,
                 points,
                 rotationAngle,
-                rotateSpeed
+                rotateSpeed,
+                color
             });
         }
     });
@@ -712,52 +755,105 @@ function drawStars(size: number, index: number) {
     });
 }
 
-function drawRocks(size: number, index: number) {
-    theGrid[index].rocks.forEach(rock => {
+function drawRocks() {
+    rocks.forEach(rock => {
+        if (
+            rock.centerX > (viewEdgeLeft - 100) &&
+            rock.centerX < (viewEdgeRight + 100) &&
+            rock.centerY > (viewEdgeTop - 100) &&
+            rock.centerY < (viewEdgeBottom + 100)
+        ) {
 
-        ctx.save();
-        //ctx.translate(300,300);
-        ctx.translate(rock.centerX + theGrid[index].x * size, rock.centerY + theGrid[index].y * size);
-        let rad = (rock.rotationAngle * Math.PI / 180) * rock.rotateSpeed;
-        ctx.rotate(rad);
+            ctx.save();
+            //ctx.translate(300,300);
+            //ctx.translate(rock.centerX + theGrid[index].x * size, rock.centerY + theGrid[index].y * size);
+            ctx.translate(rock.centerX, rock.centerY);
+            let rad = (rock.rotationAngle * Math.PI / 180) * rock.rotateSpeed;
+            ctx.rotate(rad);
 
-        ctx.beginPath();
-        ctx.strokeStyle = 'lime';
-        ctx.lineWidth = 2;
-        ctx.font = 'Bold 16px Courier New';
-        ctx.fillStyle = 'lime';
+            ctx.beginPath();
+            ctx.strokeStyle = 'lime';
+            ctx.lineWidth = 2;
+            ctx.font = 'Bold 16px Courier New';
+            ctx.fillStyle = rock.color;
 
-        // move to the first point
-        ctx.moveTo(rock.points[0].x, rock.points[0].y);
+            // move to the first point
+            ctx.moveTo(rock.points[0].x, rock.points[0].y);
 
-        let i = 0;
+            let i = 0;
 
-        for (i = 1; i < rock.points.length - 1; i++) {
-            var xc = (rock.points[i].x + rock.points[i + 1].x) / 2;
-            var yc = (rock.points[i].y + rock.points[i + 1].y) / 2;
-            ctx.quadraticCurveTo(rock.points[i].x, rock.points[i].y, xc, yc);
+            for (i = 1; i < rock.points.length - 1; i++) {
+                var xc = (rock.points[i].x + rock.points[i + 1].x) / 2;
+                var yc = (rock.points[i].y + rock.points[i + 1].y) / 2;
+                ctx.quadraticCurveTo(rock.points[i].x, rock.points[i].y, xc, yc);
+            }
+            // curve through the last two points
+            ctx.quadraticCurveTo(rock.points[11].x, rock.points[11].y, rock.points[0].x, rock.points[0].y);
+            ctx.strokeStyle = 'lime';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.fillStyle = rock.color;
+            ctx.fill();
+
+            /*
+            // draw radius
+            ctx.beginPath();
+            ctx.arc(0, 0, rock.radius, 0, 360);
+            ctx.stroke();
+            */
+
+            /*
+            if (showStats) {
+                ctx.textAlign = 'left';
+                ctx.font = 'Bold 13px Courier New';
+                ctx.fillStyle = 'lime';
+                //ctx.fillText('X: ' + Math.round(rock.centerX + (theGrid[index].x * size)), -rock.centerX, rock.centerY - 14);
+                //ctx.fillText('Y: ' + Math.round(rock.centerY + (theGrid[index].y * size)), -rock.centerX, rock.centerY);
+                ctx.fillText('X: ' + Math.round(rock.centerX), -rock.centerX, rock.centerY - 14);
+                ctx.fillText('Y: ' + Math.round(rock.centerY), -rock.centerX, rock.centerY);
+            }
+            */
+
+            ctx.restore();
+
+            rock.rotationAngle++;
         }
-        // curve through the last two points
-        ctx.quadraticCurveTo(rock.points[11].x, rock.points[11].y, rock.points[0].x, rock.points[0].y);
-        ctx.strokeStyle = 'lime';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-        ctx.fillStyle = 'dimgray';
-        ctx.fill();
-
-        /* draw radius
-        ctx.beginPath();
-        ctx.arc(0, 0, rock.radius, 0, 360);
-        ctx.stroke();
-*/
-        ctx.textAlign = 'left';
-        ctx.font = 'Bold 13px Courier New';
-        ctx.fillStyle = 'lime';
-        ctx.fillText('X: ' + Math.round(rock.centerX + (theGrid[index].x * size)), -rock.centerX, rock.centerY - 14);
-        ctx.fillText('Y: ' + Math.round(rock.centerY + (theGrid[index].y * size)), -rock.centerX, rock.centerY);
-
-        ctx.restore();
-
-        rock.rotationAngle++;
     });
+}
+
+function collisionDetection() {
+    collisionRocks();
+}
+
+function collisionRocks() {
+    shotsFired.forEach(shot => {
+        rocks.forEach(rock => {
+            if (collisionDetect(rock, shot)) {
+                removeRock(rock);
+                removeShot(shot);
+            }
+        });
+    });
+};
+
+function removeRock(rock) {
+    let i = rocks.indexOf(rock);
+    rocks.splice(i, 1);
+}
+
+function removeShot(shot) {
+    let i = shotsFired.indexOf(shot);
+    shotsFired.splice(i, 1);
+}
+
+function collisionDetect(object1, object2) {
+    // https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
+    var dx = (object1.centerX) - (object2.centerX);
+    var dy = (object1.centerY) - (object2.centerY);
+    var distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance <= object1.radius)
+        return true; //collision
+    else
+        return false; //no collision
 }

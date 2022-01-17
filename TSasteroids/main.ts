@@ -41,6 +41,11 @@ let gbl_canvasWidth = window.innerWidth,
     viewEdgeTop: number,
     viewEdgeBottom: number;
 
+let audioLaser = new Audio('assets/audio/laserShoot.wav'),
+    audioExplosion = new Audio('assets/audio/explosion.wav');
+//https://sfxr.me/
+
+
 let shipPosition = {
     x: 0,
     y: 0
@@ -246,6 +251,8 @@ function fireShot() {
             radius: 2,
             shotVelocity: shipVelocity + shotVelocity
         });
+
+        audioLaser.play();
     }
 }
 
@@ -831,6 +838,7 @@ function collisionRocks() {
             if (collisionDetect(rock, shot)) {
                 removeRock(rock);
                 removeShot(shot);
+                audioExplosion.play();
             }
         });
     });

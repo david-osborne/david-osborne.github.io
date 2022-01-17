@@ -1,4 +1,6 @@
 let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 20, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = true, showStats = true, shotsFired = [], shotVelocity = 2, shotDuration = 400, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom;
+let audioLaser = new Audio('assets/audio/laserShoot.wav'), audioExplosion = new Audio('assets/audio/explosion.wav');
+//https://sfxr.me/
 let shipPosition = {
     x: 0,
     y: 0
@@ -173,6 +175,7 @@ function fireShot() {
             radius: 2,
             shotVelocity: shipVelocity + shotVelocity
         });
+        audioLaser.play();
     }
 }
 function shotTimer() {
@@ -653,6 +656,7 @@ function collisionRocks() {
             if (collisionDetect(rock, shot)) {
                 removeRock(rock);
                 removeShot(shot);
+                audioExplosion.play();
             }
         });
     });

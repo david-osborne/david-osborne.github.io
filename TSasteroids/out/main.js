@@ -1,6 +1,8 @@
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 20, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = true, showStats = true, shotsFired = [], shotVelocity = 2, shotDuration = 400, shotEnabled = true, shotInterval = 200, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 8, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, shotsFired = [], shotVelocity = 2, shotDuration = 400, shotEnabled = true, shotInterval = 400, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom;
+//#region SOUNDS
 let audioLaser = new Audio('assets/audio/laserShoot.wav'), audioExplosion = new Audio('assets/audio/explosion.wav');
 //https://sfxr.me/
+//#endregion
 let shipPosition = {
     x: 0,
     y: 0
@@ -60,8 +62,8 @@ function wheel(e) {
 }
 function mouseMove(e) {
     var rect = cvs.getBoundingClientRect(); //get canvas boundries
-    gbl_mouseX = e.clientX - rect.left;
-    gbl_mouseY = e.clientY - rect.top;
+    gbl_mouseX = e.clientX - rect.left; //get mouse X pos, set to global
+    gbl_mouseY = e.clientY - rect.top; //get mouse Y pos, set to global
     setShipAngle();
 }
 function touchStart() {
@@ -94,10 +96,12 @@ function setShipAngle() {
     // angle in degrees
     var angleDeg = Math.round(angleRadians * (180 / Math.PI));
     gbl_mouseAngle = angleDeg;
+    shipAngle = gbl_mouseAngle + 90;
 }
 function keyDown(e) {
     switch (e.code) {
-        //leftww
+        /*
+        //left
         case "KeyA":
         case "ArrowLeft":
             shipAngle -= shipTurnRate;
@@ -107,6 +111,7 @@ function keyDown(e) {
         case "ArrowRight":
             shipAngle += shipTurnRate;
             break;
+        */
         //up
         case "KeyW":
         case "ArrowUp":
@@ -151,7 +156,7 @@ function updateThrottle(action) {
     }
 }
 function updateVelocity() {
-    let targetVelocity = (shipThrottle / 100) * shipVelocityMax;
+    let targetVelocity = Math.round((shipThrottle / 100) * shipVelocityMax);
     if (shipVelocity < targetVelocity)
         shipVelocity++;
     if (shipVelocity > targetVelocity)
@@ -173,7 +178,8 @@ function fireShot() {
             angle: shipAngle,
             duration: 0,
             radius: 2,
-            shotVelocity: shipVelocity + shotVelocity
+            shotVelocity: shipVelocity + shotVelocity,
+            boolean: false
         });
         audioLaser.play();
     }
@@ -185,19 +191,35 @@ function drawShots() {
     const currentTime = new Date;
     shotsFired.forEach(shot => {
         let rad = shot.angle * (Math.PI / 180);
-        shot.centerX += Math.sin(rad) * shot.shotVelocity;
-        shot.centerY -= Math.cos(rad) * shot.shotVelocity;
+        // increment the shot position
+        shot.centerX += Math.sin(rad) * shot.shotVelocity * 1.5;
+        shot.centerY -= Math.cos(rad) * shot.shotVelocity * 1.5;
         //console.log('X: ' + Math.round(shot.x) + ' Y: ' + Math.round(shot.y));
-        ctx.beginPath();
-        ctx.strokeStyle = 'lime';
-        ctx.fillStyle = "rgba(0,255,0," + 0.4 + ")";
-        ctx.arc(shot.centerX, shot.centerY, shot.radius + 2, 0, 360);
-        ctx.fill();
-        ctx.stroke();
+        /*
         ctx.beginPath();
         ctx.fillStyle = 'red';
-        ctx.arc(shot.centerX, shot.centerY, shot.size, 0, 360);
+        ctx.arc(shot.centerX, shot.centerY, shot.radius, 0, 360);
         ctx.fill();
+*/
+        ctx.beginPath();
+        ctx.strokeStyle = 'cyan';
+        ctx.fillStyle = 'magenta';
+        ctx.lineWidth = 2;
+        ctx.moveTo(shot.centerX, shot.centerY);
+        var length = 12;
+        let rad2 = (shot.angle + 90 + 15) * (Math.PI / 180);
+        var x2 = Math.cos(rad2) * length;
+        var y2 = Math.sin(rad2) * length;
+        ctx.lineTo(shot.centerX + x2, shot.centerY + y2);
+        let rad3 = (shot.angle + 90 - 15) * (Math.PI / 180);
+        var x3 = Math.cos(rad3) * length;
+        var y3 = Math.sin(rad3) * length;
+        ctx.lineTo(shot.centerX + x3, shot.centerY + y3);
+        ctx.lineTo(shot.centerX, shot.centerY);
+        ctx.fill();
+        ctx.stroke();
+        //ctx.fillStyle = "rgba(0,255,0," + 0.4 + ")"  //semi-transparent fill
+        //ctx.arc(shot.centerX, shot.centerY, shot.radius + 2, 0, 360);
         /*
         if (showStats) {
             ctx.textAlign = 'left';
@@ -209,6 +231,7 @@ function drawShots() {
 */
         shot.duration++;
     });
+    // delete the shot from the array if it's exceeded the global duration limit
     for (let i = 0; i < shotsFired.length; i++) {
         if (shotsFired[i].duration >= shotDuration) {
             shotsFired.splice(i, 1);
@@ -241,7 +264,9 @@ function gameLoop(timeStamp) {
     if (showStats)
         drawStats(fps);
     drawshipThrottle();
+    //drawMouseLine();
     drawMouseCrosshairs();
+    //drawMouseCircle();
     collisionDetection();
     // Keep requesting new frames
     window.requestAnimationFrame(gameLoop);
@@ -252,6 +277,21 @@ function determineViewBoundries() {
     viewEdgeRight = -Math.round(shipPosition.x - (gbl_canvasWidth / 2));
     viewEdgeTop = -Math.round(shipPosition.y + (gbl_canvasHeight / 2));
     viewEdgeBottom = -Math.round(shipPosition.y - (gbl_canvasHeight / 2));
+}
+function drawMouseCircle() {
+    ctx.strokeStyle = 'red';
+    ctx.lineStyle = 2;
+    ctx.beginPath();
+    ctx.arc(gbl_canvasWidth / 2, gbl_canvasHeight / 2, 100, 0, 360);
+    ctx.stroke();
+}
+function drawMouseLine() {
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(gbl_mouseX, gbl_mouseY);
+    ctx.lineTo(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
+    ctx.stroke();
 }
 function drawMouseCrosshairs() {
     ctx.strokeStyle = 'red';
@@ -299,12 +339,11 @@ function clearCanvas() {
 function drawShip(x, y) {
     //ctx.imageSmoothingEnabled = true;
     //ctx.imageSmoothingQuality = "high";
-    shipAngle = gbl_mouseAngle + 90;
     ctx.save();
     let rad = shipAngle * Math.PI / 180;
     ctx.translate(x, y);
     ctx.rotate(rad);
-    drawShield();
+    //drawShield();
     generateFlame();
     //ship
     ctx.beginPath();
@@ -430,6 +469,7 @@ function drawStats(fps) {
         'FPS: ' + fps,
         'Ship Position X: ' + -Math.round(shipPosition.x),
         'Ship Position Y: ' + -Math.round(shipPosition.y),
+        'Ship Angle: ' + Math.round(shipAngle),
         'Ship Grid: ' + theGrid.find(gridLookup),
         'Grid Count: ' + gridCount,
         'Grid Rows: ' + gridRows,
@@ -566,7 +606,7 @@ function generateRocks(size) {
                 angle += 30;
             }
             let rotationAngle = 0;
-            let color = 'dimgray';
+            let color = 'black'; //'dimgray';
             rocks.push({
                 centerX,
                 centerY,
@@ -675,7 +715,7 @@ function collisionDetect(object1, object2) {
     var dx = (object1.centerX) - (object2.centerX);
     var dy = (object1.centerY) - (object2.centerY);
     var distance = Math.sqrt(dx * dx + dy * dy);
-    if (distance <= object1.radius)
+    if (distance <= object1.radius + 10)
         return true; //collision
     else
         return false; //no collision

@@ -36,6 +36,7 @@ let gbl_canvasWidth = window.innerWidth,
     flameShift: number = 0,
     flameDir: number = 0,
     rocks: any[] = [],
+    rocksExploding: any[] = [],
     viewEdgeLeft: number,
     viewEdgeRight: number,
     viewEdgeTop: number,
@@ -642,6 +643,7 @@ function drawTranslatedObjects() {
     // call drawing for translated (shifted) objects
     drawGrid();
     drawRocks();
+    drawRockExplosions();
     drawShots();
 
     ctx.restore();
@@ -881,6 +883,7 @@ function collisionRocks() {
     shotsFired.forEach(shot => {
         rocks.forEach(rock => {
             if (collisionDetect(rock, shot)) {
+                generateRockExplosion(rock);
                 removeRock(rock);
                 removeShot(shot);
                 audioExplosion.play();
@@ -909,4 +912,63 @@ function collisionDetect(object1, object2) {
         return true; //collision
     else
         return false; //no collision
+}
+
+function generateRockExplosion(rock) {
+    let i = rocks.indexOf(rock);
+
+    let tempAngles: any[] = [];
+    rocks[i].points.forEach(point => {
+        tempAngles.push({
+            a: randomInt(0, 360)
+        });
+    });
+
+    tempAngles.forEach(angle => {
+        console.log(angle);
+    });
+
+    rocksExploding.push({
+        centerX: rocks[i].centerX,
+        centerY: rocks[i].centerY,
+        radius: rocks[i].radius,
+        points: rocks[i].points,
+        size: rocks[i].radius,
+        angles: tempAngles
+    });
+
+}
+
+function drawRockExplosions() {
+    rocksExploding.forEach(explodingRock => {
+        let i = rocksExploding.indexOf(explodingRock);
+
+        explodingRock.points.forEach(point => {
+            //set fill color
+            ctx.strokeStyle = 'lime'
+            ctx.fillStyle = 'lime';
+
+            let x = explodingRock.points.indexOf(point);
+            let a = explodingRock.angles[x].a;
+
+            console.log(a);
+
+            let rad = a  * (Math.PI / 180);
+
+            // increment the shot position
+            point.x += Math.sin(rad) * 1.5;
+            point.y -= Math.cos(rad) * 1.5;
+
+            //draw filled circle
+            ctx.beginPath();
+            ctx.arc(point.x + explodingRock.centerX, point.y + explodingRock.centerY, explodingRock.size, 0, 360);
+            ctx.stroke();
+            //ctx.fill();
+        });
+
+        if (explodingRock.size >= 1)
+            explodingRock.size = explodingRock.size * .95;
+        else
+        rocksExploding.splice(i, 1);
+    });
 }

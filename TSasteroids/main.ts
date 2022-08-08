@@ -369,6 +369,8 @@ function gameLoop(timeStamp) {
 
     collisionDetection();
 
+    cleanup();
+
     // Keep requesting new frames
     window.requestAnimationFrame(gameLoop);
 }
@@ -915,17 +917,15 @@ function collisionDetect(object1, object2) {
 }
 
 function generateRockExplosion(rock) {
-    let i = rocks.indexOf(rock);
+    let i = rocks.indexOf(rock),
+        tempAngles: any[] = [],
+        tempRadius: any[] = [],
+        minRadius: any = rocks[i].radius * .1,
+        maxRadius: any = rocks[i].radius * .8;
 
-    let tempAngles: any[] = [];
     rocks[i].points.forEach(point => {
-        tempAngles.push({
-            a: randomInt(0, 360)
-        });
-    });
-
-    tempAngles.forEach(angle => {
-        console.log(angle);
+        tempAngles.push({ a: randomInt(0, 360) });
+        tempRadius.push({ r: randomInt(minRadius, maxRadius) });
     });
 
     rocksExploding.push({
@@ -933,42 +933,91 @@ function generateRockExplosion(rock) {
         centerY: rocks[i].centerY,
         radius: rocks[i].radius,
         points: rocks[i].points,
-        size: rocks[i].radius,
-        angles: tempAngles
+        size: 100,
+        angles: tempAngles,
+        radii: tempRadius,
+        rockSize: 1,
+        opacity: 0.8
     });
-
 }
 
 function drawRockExplosions() {
     rocksExploding.forEach(explodingRock => {
-        let i = rocksExploding.indexOf(explodingRock);
+        let index = rocksExploding.indexOf(explodingRock);
 
         explodingRock.points.forEach(point => {
             //set fill color
-            ctx.strokeStyle = 'lime'
-            ctx.fillStyle = 'lime';
+            ctx.strokeStyle = "rgba(0,255,0," + explodingRock.opacity + ")";
+            ctx.fillStyle = "rgba(0,255,0," + explodingRock.opacity + ")";
 
-            let x = explodingRock.points.indexOf(point);
-            let a = explodingRock.angles[x].a;
+            let i = explodingRock.points.indexOf(point);
+            let a = explodingRock.angles[i].a;
+            let r = explodingRock.radii[i].r;
 
-            console.log(a);
+            let rad = a * (Math.PI / 180);
 
-            let rad = a  * (Math.PI / 180);
-
-            // increment the shot position
+            // increment the points position
             point.x += Math.sin(rad) * 1.5;
             point.y -= Math.cos(rad) * 1.5;
 
             //draw filled circle
             ctx.beginPath();
-            ctx.arc(point.x + explodingRock.centerX, point.y + explodingRock.centerY, explodingRock.size, 0, 360);
+            ctx.arc(point.x + explodingRock.centerX, point.y + explodingRock.centerY, r * explodingRock.rockSize, 0, 360);
             ctx.stroke();
             //ctx.fill();
         });
 
-        if (explodingRock.size >= 1)
-            explodingRock.size = explodingRock.size * .95;
-        else
-        rocksExploding.splice(i, 1);
+        //draw red filled circle
+        ctx.fillStyle = "rgba(255,0,0," + explodingRock.opacity + ")";
+        ctx.beginPath();
+        ctx.arc(explodingRock.centerX, explodingRock.centerY, explodingRock.radius, 0, 360);
+        //ctx.stroke();
+        ctx.fill();
+
+        //draw orange filled circle
+        ctx.fillStyle = "rgba(255,165,0," + explodingRock.opacity + ")";
+        ctx.beginPath();
+        ctx.arc(explodingRock.centerX, explodingRock.centerY, explodingRock.radius * 0.6, 0, 360);
+        //ctx.stroke();
+        ctx.fill();
+
+        //draw yellow filled circle
+        ctx.fillStyle = "rgba(255,255,0," + explodingRock.opacity + ")";
+        ctx.beginPath();
+        ctx.arc(explodingRock.centerX, explodingRock.centerY, explodingRock.radius * 0.3, 0, 360);
+        //ctx.stroke();
+        ctx.fill();
+
+        //draw purple filled circle
+        ctx.fillStyle = "rgba(128,0,128," + explodingRock.opacity + ")";
+        ctx.beginPath();
+        ctx.arc(explodingRock.centerX, explodingRock.centerY, explodingRock.radius * 0.1, 0, 360);
+        //ctx.stroke();
+        ctx.fill();
+
+        //draw purple traced circle
+        ctx.strokeStyle = "rgba(128,0,128," + explodingRock.opacity + ")";
+        ctx.beginPath();
+        ctx.arc(explodingRock.centerX, explodingRock.centerY, explodingRock.radius, 0, 360);
+        ctx.stroke();
+
+        explodingRock.opacity = explodingRock.opacity * .95;
+        explodingRock.rockSize = explodingRock.rockSize * .95;
+        explodingRock.radius++;
+        explodingRock.size--;
+    });
+
+
+}
+
+function cleanup() {
+    cleanupRockExplosions();
+}
+
+function cleanupRockExplosions() {
+    rocksExploding.forEach(explodingRock => {
+        let i = rocksExploding.indexOf(explodingRock);
+        if (explodingRock.size <= 10)
+            rocksExploding.splice(i, 1);
     });
 }

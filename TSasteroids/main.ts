@@ -24,9 +24,10 @@ let gbl_canvasWidth = window.innerWidth,
     worldSizeY: number = 0,
     showGrid: boolean = false,
     showStats: boolean = false,
+    showMouse: boolean = false,
     shotsFired: any[] = [],
-    shotVelocity: number = 2,
-    shotDuration: number = 400,
+    shotVelocity: number = 4,
+    shotDuration: number = 50,
     shotEnabled: boolean = true,
     shotInterval: number = 400,
     gbl_mouseX: number = 0,
@@ -172,18 +173,18 @@ function setShipAngle() {
 
 function keyDown(e) {
     switch (e.code) {
-        /*
         //left
         case "KeyA":
         case "ArrowLeft":
-            shipAngle -= shipTurnRate;
+            shipAngle = shipAngle * 1.1;
+            //shipAngle -= shipTurnRate;
             break;
         //right
         case "KeyD":
         case "ArrowRight":
-            shipAngle += shipTurnRate;
+            shipAngle = shipAngle * 0.9;
+            //shipAngle += shipTurnRate;
             break;
-        */
         //up
         case "KeyW":
         case "ArrowUp":
@@ -211,6 +212,12 @@ function keyDown(e) {
                 showStats = false;
             else if (showStats == false)
                 showStats = true;
+            break;
+        case "KeyM":
+            if (showMouse == true)
+                showMouse = false;
+            else if (showMouse == false)
+                showMouse = true;
             break;
     }
 }
@@ -356,6 +363,7 @@ function gameLoop(timeStamp) {
     determineViewBoundries();
     drawTranslatedObjects();
     drawShip(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
+
     shipMovement();
     if (gbl_mouseDown)
         fireShot();
@@ -363,8 +371,9 @@ function gameLoop(timeStamp) {
         drawStats(fps);
     drawshipThrottle();
 
-    //drawMouseLine();
-    drawMouseCrosshairs();
+    if (showMouse)
+        //drawMouseLine();
+        drawMouseCrosshairs();
     //drawMouseCircle();
 
     collisionDetection();
@@ -475,6 +484,13 @@ function drawShip(x: number, y: number) {
     ctx.lineTo(-12, 20); //lower left tip
     ctx.lineTo(0, -20); //nose of ship
     ctx.fill();
+    ctx.stroke();
+
+    //shot range
+    ctx.beginPath();
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = 2;
+    ctx.arc(0, 0, 100, 0, .25 * Math.PI);
     ctx.stroke();
 
     ctx.restore();
@@ -845,6 +861,7 @@ function drawRocks() {
             }
             // curve through the last two points
             ctx.quadraticCurveTo(rock.points[11].x, rock.points[11].y, rock.points[0].x, rock.points[0].y);
+
             ctx.strokeStyle = 'lime';
             ctx.lineWidth = 3;
             ctx.stroke();
@@ -879,6 +896,7 @@ function drawRocks() {
 
 function collisionDetection() {
     collisionRocks();
+    collisionShip();
 }
 
 function collisionRocks() {
@@ -894,6 +912,17 @@ function collisionRocks() {
     });
 };
 
+function collisionShip() {
+    rocks.forEach(rock => {
+        if (collisionDetect(rock, null)) {
+            generateRockExplosion(rock);
+            removeRock(rock);
+            shipVelocity = shipVelocity * 0.6;
+            audioExplosion.play();
+        }
+    })
+}
+
 function removeRock(rock) {
     let i = rocks.indexOf(rock);
     rocks.splice(i, 1);
@@ -906,8 +935,14 @@ function removeShot(shot) {
 
 function collisionDetect(object1, object2) {
     // https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
-    var dx = (object1.centerX) - (object2.centerX);
-    var dy = (object1.centerY) - (object2.centerY);
+    if (object2) {
+        var dx = (object1.centerX) - (object2.centerX); ``
+        var dy = (object1.centerY) - (object2.centerY);
+    }
+    else { //ship
+        var dx = (object1.centerX) - (-shipPosition.x);
+        var dy = (object1.centerY) - (-shipPosition.y);
+    }
     var distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance <= object1.radius + 10)
@@ -996,6 +1031,7 @@ function drawRockExplosions() {
         ctx.fill();
 
         //draw purple traced circle
+        ctx.lineWidth = 2;
         ctx.strokeStyle = "rgba(128,0,128," + explodingRock.opacity + ")";
         ctx.beginPath();
         ctx.arc(explodingRock.centerX, explodingRock.centerY, explodingRock.radius, 0, 360);
@@ -1017,7 +1053,7 @@ function cleanup() {
 function cleanupRockExplosions() {
     rocksExploding.forEach(explodingRock => {
         let i = rocksExploding.indexOf(explodingRock);
-        if (explodingRock.size <= 10)
+        if (explodingRock.size <= 2)
             rocksExploding.splice(i, 1);
     });
 }

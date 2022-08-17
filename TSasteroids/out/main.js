@@ -1,6 +1,9 @@
 let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 8, shipTurnRate = 5, shipThrottle = 50, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = false, shotsFired = [], shotVelocity = 4, shotDuration = 50, shotEnabled = true, shotInterval = 400, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [], rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom;
 //#region SOUNDS
-let audioLaser = new Audio('assets/audio/laserShoot.wav'), audioExplosion = new Audio('assets/audio/explosion.wav');
+const audioLaser = new Audio('assets/audio/laserShoot.wav');
+const audioExplosion = new Audio('assets/audio/explosion.wav');
+//let audioLaser = new Audio('assets/audio/laserShoot.wav'),
+//    audioExplosion = new Audio('assets/audio/explosion.wav');
 //https://sfxr.me/
 //#endregion
 let shipPosition = {
@@ -31,6 +34,8 @@ function startGame() {
     generateStars(theGridDim);
     generateRocks(theGridDim);
     setInterval(updateVelocity, 200);
+    //init sounds
+    audioExplosion;
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
 }
@@ -366,11 +371,13 @@ function drawShip(x, y) {
     ctx.fill();
     ctx.stroke();
     //shot range
+    /*
     ctx.beginPath();
     ctx.strokeStyle = 'blue';
     ctx.lineWidth = 2;
     ctx.arc(0, 0, 100, 0, .25 * Math.PI);
     ctx.stroke();
+*/
     ctx.restore();
 }
 function generateFlame() {

@@ -44,8 +44,11 @@ let gbl_canvasWidth = window.innerWidth,
     viewEdgeBottom: number;
 
 //#region SOUNDS
-let audioLaser = new Audio('assets/audio/laserShoot.wav'),
-    audioExplosion = new Audio('assets/audio/explosion.wav');
+const audioLaser = new Audio('assets/audio/laserShoot.wav');
+const audioExplosion = new Audio('assets/audio/explosion.wav');
+
+//let audioLaser = new Audio('assets/audio/laserShoot.wav'),
+//    audioExplosion = new Audio('assets/audio/explosion.wav');
 //https://sfxr.me/
 //#endregion
 
@@ -87,6 +90,8 @@ function startGame() {
 
     setInterval(updateVelocity, 200);
 
+    //init sounds
+    audioExplosion
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
 }
@@ -487,12 +492,13 @@ function drawShip(x: number, y: number) {
     ctx.stroke();
 
     //shot range
+    /*
     ctx.beginPath();
     ctx.strokeStyle = 'blue';
     ctx.lineWidth = 2;
     ctx.arc(0, 0, 100, 0, .25 * Math.PI);
     ctx.stroke();
-
+*/
     ctx.restore();
 }
 

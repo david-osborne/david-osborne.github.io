@@ -1,4 +1,4 @@
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 8, shipTurnRate = 5, shipThrottle = 50, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = false, shotsFired = [], shotVelocity = 4, shotDuration = 100, shotEnabled = true, shotInterval = 400, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [], rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 8, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = false, shotsFired = [], shotVelocity = 0, shotDuration = 100, shotEnabled = true, shotInterval = 400, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [], rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom;
 //#region SOUNDS
 const audioLaser = new Audio('assets/audio/laserShoot.wav');
 const audioExplosion = new Audio('assets/audio/explosion.wav');
@@ -602,9 +602,9 @@ function generateStars(size) {
         let starCount = Math.sqrt(size / 4);
         for (let i = 0; i < starCount; i++) {
             let twinkleChance = randomInt(0, 100), twinkleOn = 0;
-            if (twinkleChance > 40)
+            if (twinkleChance > 60)
                 twinkleOn = 1;
-            let starX = randomInt(0, size), starY = randomInt(0, size), starR = randomInt(1, 2), starOpacity = Math.random() + 0.3, //math random generates between 0 and 1, sets min at 0.3
+            let starX = randomInt(0, size), starY = randomInt(0, size), starR = randomInt(1, 2), starOpacity = randomInt(1, 100), //math random generates between 0 and 1
             starTwinkle = twinkleOn, starTwinkleUp = Math.round(Math.random()); //generates a number less than 0.5 the result will be 0 otherwise it should be 1
             grid.stars.push({
                 starX,
@@ -651,24 +651,27 @@ function generateRocks(size) {
 function drawStars(size, index) {
     theGrid[index].stars.forEach(star => {
         ctx.beginPath();
-        //ctx.fillStyle = "rgba(255,255,255," + theGrid[index].opacity + ")";
-        if (star.starTwinkle == true)
-            ctx.fillStyle = "rgba(128,0,128," + star.starOpacity + ")";
-        else
-            ctx.fillStyle = "rgba(255,255,255," + star.starOpacity + ")";
+        ctx.fillStyle = "rgba(255,255,255," + (star.starOpacity / 100) + ")";
         ctx.arc((theGrid[index].x * size) + star.starX, (theGrid[index].y * size) + star.starY, star.starR, 0, 360);
         ctx.fill();
         if (star.starTwinkle == 1) {
+            ctx.font = 'Bold 11px Courier New';
+            if (star.starTwinkleUp == 1)
+                ctx.fillStyle = 'blue';
+            else
+                ctx.fillStyle = 'red';
+            //ctx.fillText(star.starOpacity + ':' + star.starTwinkleUp, (theGrid[index].x * size) + star.starX + 20, (theGrid[index].y * size) + star.starY + 10);
             if (star.starTwinkleUp == 1) {
-                star.starOpacity = star.starOpacity * 1.01;
+                star.starOpacity++;
             }
             else if (star.starTwinkleUp == 0) {
-                star.starOpacity = star.starOpacity * 0.99;
+                star.starOpacity--;
             }
-            if (star.starOpacity >= 1)
+        }
+        if (star.starTwinkle == 1) {
+            if (star.starOpacity >= 99)
                 star.starTwinkleUp = 0;
-            if (star.starOpacity <= 0) {
-                star.starOpacity = 0.1;
+            else if (star.starOpacity <= 1) {
                 star.starTwinkleUp = 1;
             }
         }

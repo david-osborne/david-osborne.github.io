@@ -12,7 +12,7 @@ let gbl_canvasWidth = window.innerWidth,
     shipVelocity: number = 0,
     shipVelocityMax: number = 8,
     shipTurnRate: number = 5,
-    shipThrottle: number = 50,
+    shipThrottle: number = 0,
     theGrid: any[] = [],
     theGridDim: number = 200,
     theGridQty: number = 200,
@@ -26,7 +26,7 @@ let gbl_canvasWidth = window.innerWidth,
     showStats: boolean = false,
     showMouse: boolean = false,
     shotsFired: any[] = [],
-    shotVelocity: number = 4,
+    shotVelocity: number = 0,
     shotDuration: number = 100,
     shotEnabled: boolean = true,
     shotInterval: number = 400,
@@ -766,12 +766,12 @@ function generateStars(size: number) {
         for (let i = 0; i < starCount; i++) {
             let twinkleChance = randomInt(0, 100),
                 twinkleOn = 0;
-            if (twinkleChance > 40)
+            if (twinkleChance > 60)
                 twinkleOn = 1;
             let starX = randomInt(0, size),
                 starY = randomInt(0, size),
                 starR = randomInt(1, 2),
-                starOpacity = Math.random() + 0.3, //math random generates between 0 and 1, sets min at 0.3
+                starOpacity = randomInt(1, 100), //math random generates between 0 and 1
                 starTwinkle = twinkleOn,
                 starTwinkleUp = Math.round(Math.random()); //generates a number less than 0.5 the result will be 0 otherwise it should be 1
             grid.stars.push({
@@ -830,26 +830,31 @@ function generateRocks(size: number) {
 function drawStars(size: number, index: number) {
     theGrid[index].stars.forEach(star => {
         ctx.beginPath();
-        //ctx.fillStyle = "rgba(255,255,255," + theGrid[index].opacity + ")";
-        if (star.starTwinkle == true)
-            ctx.fillStyle = "rgba(128,0,128," + star.starOpacity + ")";
-        else
-            ctx.fillStyle = "rgba(255,255,255," + star.starOpacity + ")";
+        ctx.fillStyle = "rgba(255,255,255," + (star.starOpacity / 100) + ")";
         ctx.arc((theGrid[index].x * size) + star.starX, (theGrid[index].y * size) + star.starY, star.starR, 0, 360);
         ctx.fill();
 
         if (star.starTwinkle == 1) {
+            ctx.font = 'Bold 11px Courier New';
+            if (star.starTwinkleUp == 1)
+                ctx.fillStyle = 'blue';
+            else
+                ctx.fillStyle = 'red';
+            //ctx.fillText(star.starOpacity + ':' + star.starTwinkleUp, (theGrid[index].x * size) + star.starX + 20, (theGrid[index].y * size) + star.starY + 10);
+
             if (star.starTwinkleUp == 1) {
-                star.starOpacity = star.starOpacity * 1.01;
+                star.starOpacity++;
             }
             else if (star.starTwinkleUp == 0) {
-                star.starOpacity = star.starOpacity * 0.99;
+                star.starOpacity--;
             }
 
-            if (star.starOpacity >= 1)
+        }
+
+        if (star.starTwinkle == 1) {
+            if (star.starOpacity >= 99)
                 star.starTwinkleUp = 0;
-            if (star.starOpacity <= 0) {
-                star.starOpacity = 0.1;
+            else if (star.starOpacity <= 1) {
                 star.starTwinkleUp = 1;
             }
         }

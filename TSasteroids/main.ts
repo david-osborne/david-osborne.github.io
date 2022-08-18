@@ -27,7 +27,7 @@ let gbl_canvasWidth = window.innerWidth,
     showMouse: boolean = false,
     shotsFired: any[] = [],
     shotVelocity: number = 4,
-    shotDuration: number = 50,
+    shotDuration: number = 100,
     shotEnabled: boolean = true,
     shotInterval: number = 400,
     gbl_mouseX: number = 0,
@@ -764,13 +764,23 @@ function generateStars(size: number) {
     theGrid.forEach(grid => {
         let starCount = Math.sqrt(size / 4);
         for (let i = 0; i < starCount; i++) {
+            let twinkleChance = randomInt(0, 100),
+                twinkleOn: boolean = false;
+            if (twinkleChance > 80)
+                twinkleOn = true;
             let starX = randomInt(0, size),
                 starY = randomInt(0, size),
-                starR = randomInt(1, 2);
+                starR = randomInt(1, 2),
+                starOpacity = Math.random() + 0.3, //math random generates between 0 and 1, sets min at 0.3
+                starTwinkle: boolean = twinkleOn,
+                starTwinkleUp: boolean = false;
             grid.stars.push({
                 starX,
                 starY,
-                starR
+                starR,
+                starOpacity,
+                starTwinkle,
+                starTwinkleUp
             })
         }
     });
@@ -820,9 +830,25 @@ function generateRocks(size: number) {
 function drawStars(size: number, index: number) {
     theGrid[index].stars.forEach(star => {
         ctx.beginPath();
-        ctx.fillStyle = "rgba(255,255,255," + theGrid[index].opacity + ")";
+        //ctx.fillStyle = "rgba(255,255,255," + theGrid[index].opacity + ")";
+        if (star.starTwinkle == true)
+            ctx.fillStyle = "rgba(255,0,0," + star.starOpacity + ")";
+        else
+            ctx.fillStyle = "rgba(255,255,255," + star.starOpacity + ")";
         ctx.arc((theGrid[index].x * size) + star.starX, (theGrid[index].y * size) + star.starY, star.starR, 0, 360);
         ctx.fill();
+
+        if (star.starTwinkle == true) {
+            if (star.starTwinkleUp == true)
+                star.starOpacity = star.starOpacity * 1.01;
+            else if (star.starTwinkleUp == false)
+                star.starOpacity = star.starOpacity * 0.99;
+
+            if (star.starOpacity >= 1)
+                star.starTwinkleUp = false;
+            if (star.starOpacity <= 0)
+                star.starTwinkleUp = true;
+        }
 
         /*
         ctx.textAlign = 'left';

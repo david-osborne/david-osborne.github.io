@@ -1,7 +1,8 @@
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 8, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = false, shotsFired = [], shotVelocity = 0, shotDuration = 100, shotEnabled = true, shotInterval = 400, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [], rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 8, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = false, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 400, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [], rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0;
 //#region SOUNDS
 const audioLaser = new Audio('assets/audio/laserShoot.wav');
 const audioExplosion = new Audio('assets/audio/explosion.wav');
+const pickupCoin = new Audio('assets/audio/pickupCoin.wav');
 //let audioLaser = new Audio('assets/audio/laserShoot.wav'),
 //    audioExplosion = new Audio('assets/audio/explosion.wav');
 //https://sfxr.me/
@@ -269,6 +270,7 @@ function gameLoop(timeStamp) {
     determineViewBoundries();
     drawTranslatedObjects();
     drawShip(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
+    drawPoints();
     shipMovement();
     if (gbl_mouseDown)
         fireShot();
@@ -525,6 +527,7 @@ function drawTranslatedObjects() {
     drawGrid();
     drawRocks();
     drawRockExplosions();
+    drawRockPoints();
     drawShots();
     ctx.restore();
 }
@@ -683,6 +686,13 @@ function drawStars(size, index) {
         */
     });
 }
+function drawPoints() {
+    ctx.textAlign = 'right';
+    ctx.font = 'bold 40px courier new';
+    ctx.fillStyle = 'yellow';
+    ctx.strokeStyle = 'yellow';
+    ctx.strokeText(pointsTotal, gbl_canvasWidth - 40, 80);
+}
 function drawRocks() {
     rocks.forEach(rock => {
         if (rock.centerX > (viewEdgeLeft - 100) &&
@@ -749,6 +759,14 @@ function collisionRocks() {
                 removeRock(rock);
                 removeShot(shot);
                 audioExplosion.play();
+                pointsToDraw.push({
+                    centerX: rock.centerX,
+                    centerY: rock.centerY,
+                    fontSize: 10,
+                    duration: 0,
+                    value: 20
+                });
+                increasePoints(20);
             }
         });
     });
@@ -761,6 +779,14 @@ function collisionShip() {
             removeRock(rock);
             shipVelocity = shipVelocity * 0.6;
             audioExplosion.play();
+            pointsToDraw.push({
+                centerX: rock.centerX,
+                centerY: rock.centerY,
+                fontSize: 10,
+                duration: 0,
+                value: 10
+            });
+            increasePoints(10);
         }
     });
 }
@@ -863,8 +889,31 @@ function drawRockExplosions() {
         explodingRock.size--;
     });
 }
+const pointsToDraw = [];
+function drawRockPoints() {
+    pointsToDraw.forEach(rock => {
+        ctx.textAlign = 'center';
+        ctx.font = 'Bold 14px Courier New';
+        ctx.fillStyle = 'yellow';
+        ctx.fillText('+' + rock.value, rock.centerX, rock.centerY);
+        rock.duration++;
+    });
+}
+function cleanRockPoints() {
+    pointsToDraw.forEach(rock => {
+        let i = pointsToDraw.indexOf(rock);
+        if (rock.duration > rockPointsDurationMax)
+            pointsToDraw.splice(i, 1);
+    });
+}
+function increasePoints(amount) {
+    pointsTotal = pointsTotal + amount;
+    pickupCoin.volume = 0.5;
+    pickupCoin.play();
+}
 function cleanup() {
     cleanupRockExplosions();
+    cleanRockPoints();
 }
 function cleanupRockExplosions() {
     rocksExploding.forEach(explodingRock => {

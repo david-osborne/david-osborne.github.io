@@ -26,7 +26,7 @@ let gbl_canvasWidth = window.innerWidth,
     showStats: boolean = false,
     showMouse: boolean = false,
     shotsFired: any[] = [],
-    shotVelocity: number = 0,
+    shotVelocity: number = 6,
     shotDuration: number = 100,
     shotEnabled: boolean = true,
     shotInterval: number = 400,
@@ -41,11 +41,14 @@ let gbl_canvasWidth = window.innerWidth,
     viewEdgeLeft: number,
     viewEdgeRight: number,
     viewEdgeTop: number,
-    viewEdgeBottom: number;
+    viewEdgeBottom: number,
+    rockPointsDurationMax: number = 50,
+    pointsTotal: number = 0;
 
 //#region SOUNDS
 const audioLaser = new Audio('assets/audio/laserShoot.wav');
 const audioExplosion = new Audio('assets/audio/explosion.wav');
+const pickupCoin = new Audio('assets/audio/pickupCoin.wav');
 
 //let audioLaser = new Audio('assets/audio/laserShoot.wav'),
 //    audioExplosion = new Audio('assets/audio/explosion.wav');
@@ -368,6 +371,7 @@ function gameLoop(timeStamp) {
     determineViewBoundries();
     drawTranslatedObjects();
     drawShip(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
+    drawPoints();
 
     shipMovement();
     if (gbl_mouseDown)
@@ -668,6 +672,7 @@ function drawTranslatedObjects() {
     drawGrid();
     drawRocks();
     drawRockExplosions();
+    drawRockPoints();
     drawShots();
 
     ctx.restore();
@@ -868,6 +873,14 @@ function drawStars(size: number, index: number) {
     });
 }
 
+function drawPoints() {
+    ctx.textAlign = 'right';
+    ctx.font = 'bold 40px courier new';
+    ctx.fillStyle = 'yellow';
+    ctx.strokeStyle = 'yellow';
+    ctx.strokeText(pointsTotal, gbl_canvasWidth - 40, 80);
+}
+
 function drawRocks() {
     rocks.forEach(rock => {
         if (
@@ -948,6 +961,15 @@ function collisionRocks() {
                 removeRock(rock);
                 removeShot(shot);
                 audioExplosion.play();
+
+                pointsToDraw.push({
+                    centerX: rock.centerX,
+                    centerY: rock.centerY,
+                    fontSize: 10,
+                    duration: 0,
+                    value: 20
+                });
+                increasePoints(20);
             }
         });
     });
@@ -960,6 +982,15 @@ function collisionShip() {
             removeRock(rock);
             shipVelocity = shipVelocity * 0.6;
             audioExplosion.play();
+
+            pointsToDraw.push({
+                centerX: rock.centerX,
+                centerY: rock.centerY,
+                fontSize: 10,
+                duration: 0,
+                value: 10
+            });
+            increasePoints(10);
         }
     })
 }
@@ -1083,12 +1114,44 @@ function drawRockExplosions() {
         explodingRock.radius++;
         explodingRock.size--;
     });
+}
 
+const pointsToDraw: {
+    centerX: any,
+    centerY: any,
+    fontSize: number,
+    duration: number,
+    value: number
+}[] = [];
 
+function drawRockPoints() {
+    pointsToDraw.forEach(rock => {
+        ctx.textAlign = 'center';
+        ctx.font = 'Bold 14px Courier New';
+        ctx.fillStyle = 'yellow';
+        ctx.fillText('+' + rock.value, rock.centerX, rock.centerY);
+
+        rock.duration++;
+    });
+}
+
+function cleanRockPoints() {
+    pointsToDraw.forEach(rock => {
+        let i = pointsToDraw.indexOf(rock);
+        if (rock.duration > rockPointsDurationMax)
+            pointsToDraw.splice(i, 1);
+    });
+}
+
+function increasePoints(amount: number) {
+    pointsTotal = pointsTotal + amount;
+    pickupCoin.volume = 0.5;
+    pickupCoin.play();
 }
 
 function cleanup() {
     cleanupRockExplosions();
+    cleanRockPoints();
 }
 
 function cleanupRockExplosions() {

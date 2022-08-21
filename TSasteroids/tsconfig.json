@@ -4,5 +4,6 @@
         "module": "commonjs",
         "outDir": "out",
         "sourceMap": true
-    }
+    },
+    "include": ["src/rock.ts", "src/main.ts"]
 }

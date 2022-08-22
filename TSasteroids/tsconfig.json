@@ -2,8 +2,9 @@
     "compilerOptions": {
         "target": "es6",
         "module": "commonjs",
+        "moduleResolution": "node",
         "outDir": "out",
         "sourceMap": true
     },
-    "include": ["src/rock.ts", "src/main.ts"]
+    "include": ["src/**/*"]
 }

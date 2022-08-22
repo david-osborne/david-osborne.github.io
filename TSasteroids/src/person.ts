@@ -1,4 +1,5 @@
-export class Person {
-  name: string = ''
-  age: number = 0
+export class Widget {
+  public someFunction() {
+    console.log("Hello World");
+  }
 }

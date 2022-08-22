@@ -1,5 +1,11 @@
 //https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes-oop.html
 
+import {Widget} from './person';
+
+const newWidget = new Widget();
+
+newWidget.someFunction();
+
 let gbl_canvasWidth = window.innerWidth,
     gbl_canvasHeight = window.innerHeight,
     cvs,
@@ -880,7 +886,7 @@ function drawPoints() {
     //draw background
     let frameWidth = 300;
     ctx.moveTo(gbl_canvasWidth - frameWidth, 0);
-    ctx.bezierCurveTo(gbl_canvasWidth-frameWidth, 0, gbl_canvasWidth-frameWidth, 40, gbl_canvasWidth-frameWidth+40, 40);
+    ctx.bezierCurveTo(gbl_canvasWidth - frameWidth, 0, gbl_canvasWidth - frameWidth, 40, gbl_canvasWidth - frameWidth + 40, 40);
     //ctx.lineTo(gbl_canvasHeight - frameWidth, 40);
     ctx.lineTo(gbl_canvasWidth, 40);
     ctx.lineTo(gbl_canvasWidth, 0);

@@ -1,11 +1,5 @@
 //https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes-oop.html
 
-import {Widget} from './person';
-
-const newWidget = new Widget();
-
-newWidget.someFunction();
-
 let gbl_canvasWidth = window.innerWidth,
     gbl_canvasHeight = window.innerHeight,
     cvs,
@@ -488,7 +482,8 @@ function drawShip(x: number, y: number) {
 
     //drawShield();
 
-    generateFlame();
+    //generateFlame();
+    drawFlame2();
 
     //ship
     ctx.beginPath();
@@ -513,6 +508,23 @@ function drawShip(x: number, y: number) {
     ctx.stroke();
 */
     ctx.restore();
+}
+
+function drawFlame2() {
+
+    let x1 = 0;
+    let y1 = 10;
+    for (let i = 0; i < 14; i++) {
+        //angle ranges from 45 to 135...90 is center
+        let angle = randomInt(75, 105);
+        let length = randomInt(2, 10) * (shipThrottle / 10);
+        let x2 = x1 + Math.cos(Math.PI * angle / 180) * length;
+        let y2 = y1 + Math.sin(Math.PI * angle / 180) * length;
+        ctx.strokeStyle = 'blue';
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
 }
 
 function generateFlame() {
@@ -883,6 +895,7 @@ function drawStars(size: number, index: number) {
 }
 
 function drawPoints() {
+    /*
     //draw background
     let frameWidth = 300;
     ctx.moveTo(gbl_canvasWidth - frameWidth, 0);
@@ -893,11 +906,12 @@ function drawPoints() {
     ctx.lineTo(gbl_canvasWidth - frameWidth, 0);
     ctx.fillStyle = 'yellow'
     ctx.fill();
+    */
 
     ctx.textAlign = 'right';
     ctx.font = '40px Silkscreen';
-    ctx.fillStyle = 'black';
-    ctx.fillText(addCommasToNumber(pointsTotal), gbl_canvasWidth - 20, 32);
+    ctx.fillStyle = 'lime';
+    ctx.fillText(addCommasToNumber(pointsTotal), gbl_canvasWidth - 20, 36);
 }
 
 function addCommasToNumber(input: number) {

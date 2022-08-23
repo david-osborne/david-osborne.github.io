@@ -1,9 +1,4 @@
-"use strict";
 //https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes-oop.html
-Object.defineProperty(exports, "__esModule", { value: true });
-const person_1 = require("./person");
-const newWidget = new person_1.Widget();
-newWidget.someFunction();
 let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 8, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = false, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 400, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [], rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0;
 //#region SOUNDS
 const audioLaser = new Audio('assets/audio/laserShoot.wav');
@@ -365,7 +360,8 @@ function drawShip(x, y) {
     ctx.translate(x, y);
     ctx.rotate(rad);
     //drawShield();
-    generateFlame();
+    //generateFlame();
+    drawFlame2();
     //ship
     ctx.beginPath();
     ctx.strokeStyle = 'white';
@@ -387,6 +383,21 @@ function drawShip(x, y) {
     ctx.stroke();
 */
     ctx.restore();
+}
+function drawFlame2() {
+    let x1 = 0;
+    let y1 = 10;
+    for (let i = 0; i < 14; i++) {
+        //angle ranges from 45 to 135...90 is center
+        let angle = randomInt(75, 105);
+        let length = randomInt(2, 10) * (shipThrottle / 10);
+        let x2 = x1 + Math.cos(Math.PI * angle / 180) * length;
+        let y2 = y1 + Math.sin(Math.PI * angle / 180) * length;
+        ctx.strokeStyle = 'blue';
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
 }
 function generateFlame() {
     let shipThrottlePercent = shipThrottle / 100, flameLengthMax = 500, flameOpacity = 0.8, flameColors = [
@@ -693,6 +704,7 @@ function drawStars(size, index) {
     });
 }
 function drawPoints() {
+    /*
     //draw background
     let frameWidth = 300;
     ctx.moveTo(gbl_canvasWidth - frameWidth, 0);
@@ -701,12 +713,13 @@ function drawPoints() {
     ctx.lineTo(gbl_canvasWidth, 40);
     ctx.lineTo(gbl_canvasWidth, 0);
     ctx.lineTo(gbl_canvasWidth - frameWidth, 0);
-    ctx.fillStyle = 'yellow';
+    ctx.fillStyle = 'yellow'
     ctx.fill();
+    */
     ctx.textAlign = 'right';
     ctx.font = '40px Silkscreen';
-    ctx.fillStyle = 'black';
-    ctx.fillText(addCommasToNumber(pointsTotal), gbl_canvasWidth - 20, 32);
+    ctx.fillStyle = 'lime';
+    ctx.fillText(addCommasToNumber(pointsTotal), gbl_canvasWidth - 20, 36);
 }
 function addCommasToNumber(input) {
     let commas = input.toLocaleString("en-US");

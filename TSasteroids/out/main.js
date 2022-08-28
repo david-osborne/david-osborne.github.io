@@ -1,13 +1,23 @@
 //https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes-oop.html
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, shipAngle = 0, shipGridRow = 0, shipGridColumn = 0, shipVelocity = 0, shipVelocityMax = 8, shipTurnRate = 5, shipThrottle = 0, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = false, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 400, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, flameShift = 0, flameDir = 0, rocks = [], rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = false, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 400, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0;
 //#region SOUNDS
 const audioLaser = new Audio('assets/audio/laserShoot.wav');
 const audioExplosion = new Audio('assets/audio/explosion.wav');
 const pickupCoin = new Audio('assets/audio/pickupCoin.wav');
-//let audioLaser = new Audio('assets/audio/laserShoot.wav'),
-//    audioExplosion = new Audio('assets/audio/explosion.wav');
-//https://sfxr.me/
-//#endregion
+let rocks = [];
+let flameParticle = [];
+let burstParticle = [];
+let ship = {
+    angle: 0,
+    gridRow: 0,
+    gridColumn: 0,
+    velocity: 0,
+    velocityMax: 10,
+    turnRate: 0,
+    throttle: 0
+};
+function createFlameParticle() {
+}
 let shipPosition = {
     x: 0,
     y: 0
@@ -63,9 +73,9 @@ function mouseUp() {
 function wheel(e) {
     //e.preventDefault(); //disable default mouse scrolling behavior
     //let shipThrottle = shipVelocity;
-    shipThrottle += e.deltaY * -0.1;
+    ship.throttle += e.deltaY * -0.1;
     //restrict shipThrottle between min and max
-    shipThrottle = Math.min(Math.max(0, shipThrottle), 100);
+    ship.throttle = Math.min(Math.max(0, ship.throttle), 100);
 }
 function mouseMove(e) {
     var rect = cvs.getBoundingClientRect(); //get canvas boundries
@@ -103,20 +113,20 @@ function setShipAngle() {
     // angle in degrees
     var angleDeg = Math.round(angleRadians * (180 / Math.PI));
     gbl_mouseAngle = angleDeg;
-    shipAngle = gbl_mouseAngle + 90;
+    ship.angle = gbl_mouseAngle + 90;
 }
 function keyDown(e) {
     switch (e.code) {
         //left
         case "KeyA":
         case "ArrowLeft":
-            shipAngle = shipAngle * 1.1;
+            ship.angle = ship.angle * 1.1;
             //shipAngle -= shipTurnRate;
             break;
         //right
         case "KeyD":
         case "ArrowRight":
-            shipAngle = shipAngle * 0.9;
+            ship.angle = ship.angle * 0.9;
             //shipAngle += shipTurnRate;
             break;
         //up
@@ -157,29 +167,29 @@ function keyDown(e) {
 }
 function updateThrottle(action) {
     if (action == 'up') {
-        if (shipThrottle <= 90)
-            shipThrottle += 10;
+        if (ship.throttle <= 90)
+            ship.throttle += 10;
     }
     if (action == 'down') {
-        if (shipThrottle >= 10)
-            shipThrottle -= 10;
+        if (ship.throttle >= 10)
+            ship.throttle -= 10;
     }
     if (action == 'kill') {
-        shipThrottle = 0;
+        ship.throttle = 0;
     }
 }
 function updateVelocity() {
-    let targetVelocity = Math.round((shipThrottle / 100) * shipVelocityMax);
-    if (shipVelocity < targetVelocity)
-        shipVelocity++;
-    if (shipVelocity > targetVelocity)
-        shipVelocity--;
+    let targetVelocity = Math.round((ship.throttle / 100) * ship.velocityMax);
+    if (ship.velocity < targetVelocity)
+        ship.velocity++;
+    if (ship.velocity > targetVelocity)
+        ship.velocity--;
 }
 function shipMovement() {
-    shipVelocity = Math.round(shipVelocity);
-    let rad = shipAngle * (Math.PI / 180);
-    shipPosition.x += Math.sin(rad) * -shipVelocity;
-    shipPosition.y -= Math.cos(rad) * -shipVelocity;
+    ship.velocity = Math.round(ship.velocity);
+    let rad = ship.angle * (Math.PI / 180);
+    shipPosition.x += Math.sin(rad) * -ship.velocity;
+    shipPosition.y -= Math.cos(rad) * -ship.velocity;
 }
 function fireShot() {
     if (shotEnabled == true) {
@@ -188,10 +198,10 @@ function fireShot() {
         shotsFired.push({
             centerX: -shipPosition.x,
             centerY: -shipPosition.y,
-            angle: shipAngle,
+            angle: ship.angle,
             duration: 0,
             radius: 2,
-            shotVelocity: shipVelocity + shotVelocity,
+            shotVelocity: ship.velocity + shotVelocity,
             boolean: false
         });
         audioLaser.play();
@@ -356,12 +366,12 @@ function drawShip(x, y) {
     //ctx.imageSmoothingEnabled = true;
     //ctx.imageSmoothingQuality = "high";
     ctx.save();
-    let rad = shipAngle * Math.PI / 180;
+    let rad = ship.angle * Math.PI / 180;
     ctx.translate(x, y);
     ctx.rotate(rad);
     //drawShield();
     //generateFlame();
-    drawFlame2();
+    drawFlame();
     //ship
     ctx.beginPath();
     ctx.strokeStyle = 'white';
@@ -384,121 +394,21 @@ function drawShip(x, y) {
 */
     ctx.restore();
 }
-function drawFlame2() {
+function drawFlame() {
     let x1 = 0;
     let y1 = 10;
     for (let i = 0; i < 14; i++) {
         //angle ranges from 45 to 135...90 is center
         let angle = randomInt(75, 105);
-        let length = randomInt(2, 10) * (shipThrottle / 10);
+        let length = randomInt(2, 10) * (ship.throttle / 10);
         let x2 = x1 + Math.cos(Math.PI * angle / 180) * length;
         let y2 = y1 + Math.sin(Math.PI * angle / 180) * length;
+        ctx.beginPath();
         ctx.strokeStyle = 'blue';
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.stroke();
     }
-}
-function generateFlame() {
-    let shipThrottlePercent = shipThrottle / 100, flameLengthMax = 500, flameOpacity = 0.8, flameColors = [
-        "rgba(3, 109, 167,",
-        "rgba(39, 196, 230,",
-        "rgba(162, 53, 65,",
-        "rgba(251, 72, 6,",
-        "rgba(231, 121, 25,",
-        "rgba(240, 169, 33,",
-        "rgba(245, 203, 40,",
-        "rgba(246, 223, 54,",
-        "rgba(253, 250, 192,",
-        "rgba(255, 253, 240,"
-    ], flameIndex = 0, flameWidth = 11;
-    if (shipThrottlePercent > 0.9) {
-        drawFlame(1.0 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
-        flameIndex++;
-    }
-    flameWidth--;
-    if (shipThrottlePercent > 0.8) {
-        drawFlame(0.9 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
-        flameIndex++;
-    }
-    flameWidth--;
-    if (shipThrottlePercent > 0.7) {
-        drawFlame(0.8 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
-        flameIndex++;
-    }
-    flameWidth--;
-    if (shipThrottlePercent > 0.6) {
-        drawFlame(0.7 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
-        flameIndex++;
-    }
-    flameWidth--;
-    if (shipThrottlePercent > 0.5) {
-        drawFlame(0.6 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
-        flameIndex++;
-    }
-    flameWidth--;
-    if (shipThrottlePercent > 0.4) {
-        drawFlame(0.5 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
-        flameIndex++;
-    }
-    flameWidth--;
-    if (shipThrottlePercent > 0.3) {
-        drawFlame(0.4 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
-        flameIndex++;
-    }
-    flameWidth--;
-    if (shipThrottlePercent > 0.2) {
-        drawFlame(0.3 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
-        flameIndex++;
-    }
-    flameWidth--;
-    if (shipThrottlePercent > 0.1) {
-        drawFlame(0.2 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
-        flameIndex++;
-    }
-    flameWidth--;
-    if (shipThrottlePercent > 0)
-        drawFlame(0.1 * flameLengthMax, flameColors[flameIndex] + flameOpacity + ")", flameWidth);
-}
-function drawFlame(flameLength, color, width) {
-    flameFlicker(3);
-    ctx.beginPath();
-    ctx.fillStyle = color;
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = color;
-    ctx.strokeStyle = 'magenta';
-    ctx.lineWidth = 1;
-    ctx.moveTo(width, 9 + width);
-    ctx.quadraticCurveTo(flameShift, flameLength, -width, 9 + width);
-    ctx.lineTo(0, 10);
-    ctx.lineTo(width, 9 + width);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-}
-function flameFlicker(flameMax) {
-    if (flameDir == 0 && flameShift < flameMax)
-        flameShift++;
-    if (flameShift == flameMax)
-        flameDir = 1;
-    if (flameDir == 1)
-        flameShift--;
-    if (flameShift == -flameMax)
-        flameDir = 0;
-}
-function drawShield() {
-    ctx.beginPath();
-    //ctx.shadowBlur = 20;
-    //ctx.shadowColor = 'yellow';
-    ctx.strokeStyle = 'yellow';
-    ctx.lineWidth = 2;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = 'white';
-    ctx.moveTo(-30, 20);
-    ctx.quadraticCurveTo(0, -100, 30, 20);
-    ctx.stroke();
-    ctx.shadowBlur = 0;
 }
 function gridLookup(grid) {
     //let found = theGrid.find(({x})=> x === 10);
@@ -509,14 +419,14 @@ function drawStats(fps) {
         'FPS: ' + fps,
         'Ship Position X: ' + -Math.round(shipPosition.x),
         'Ship Position Y: ' + -Math.round(shipPosition.y),
-        'Ship Angle: ' + Math.round(shipAngle),
+        'Ship Angle: ' + Math.round(ship.angle),
         'Ship Grid: ' + theGrid.find(gridLookup),
         'Grid Count: ' + gridCount,
         'Grid Rows: ' + gridRows,
         'Grid Columns: ' + gridColumns,
         'Grids Rendered: ' + gridsRendered,
-        'Ship velocity: ' + shipVelocity,
-        'Ship Throttle: ' + shipThrottle,
+        'Ship velocity: ' + ship.velocity,
+        'Ship Throttle: ' + ship.throttle,
         'Rock Qty: ' + rocks.length,
         'ViewEdgeLeft: ' + viewEdgeLeft,
         'ViewEdgeRight: ' + viewEdgeRight,
@@ -604,7 +514,7 @@ function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 function drawshipThrottle() {
-    let shipThrottlePercent = shipThrottle / 100;
+    let shipThrottlePercent = ship.throttle / 100;
     ctx.beginPath();
     ctx.fillStyle = 'darkgreen';
     ctx.strokeStyle = 'lime';
@@ -615,7 +525,7 @@ function drawshipThrottle() {
     ctx.textAlign = 'right';
     ctx.font = 'Bold 16px Courier New';
     ctx.fillStyle = 'lime';
-    ctx.fillText(shipThrottle + '%', gbl_canvasWidth - 20, gbl_canvasHeight - 130);
+    ctx.fillText(ship.throttle + '%', gbl_canvasWidth - 20, gbl_canvasHeight - 130);
 }
 function generateStars(size) {
     theGrid.forEach(grid => {
@@ -645,7 +555,7 @@ function generateRocks(size) {
             let points = [], centerX = randomInt(0, size) + (grid.x * theGridDim), centerY = randomInt(0, size) + (grid.y * theGridDim), radius = randomInt(10, 40), rotateSpeed = Math.random();
             let angle = 0;
             for (let i = 0; i < 12; i++) {
-                let distance = .9 + Math.random();
+                let distance = .9 + Math.random(); // random number from 0 to .99
                 let x = radius * Math.cos(angle * Math.PI / 180) * distance;
                 let y = radius * Math.sin(angle * Math.PI / 180) * distance;
                 points.push({
@@ -751,7 +661,7 @@ function drawRocks() {
                 ctx.quadraticCurveTo(rock.points[i].x, rock.points[i].y, xc, yc);
             }
             // curve through the last two points
-            ctx.quadraticCurveTo(rock.points[11].x, rock.points[11].y, rock.points[0].x, rock.points[0].y);
+            ctx.quadraticCurveTo(rock.points[rock.points.length - 1].x, rock.points[rock.points.length - 1].y, rock.points[0].x, rock.points[0].y);
             ctx.strokeStyle = 'lime';
             ctx.lineWidth = 3;
             ctx.stroke();
@@ -809,7 +719,7 @@ function collisionShip() {
         if (collisionDetect(rock, null)) {
             generateRockExplosion(rock);
             removeRock(rock);
-            shipVelocity = shipVelocity * 0.6;
+            ship.velocity = ship.velocity * 0.6;
             audioExplosion.play();
             pointsToDraw.push({
                 centerX: rock.centerX,
@@ -848,7 +758,7 @@ function collisionDetect(object1, object2) {
         return false; //no collision
 }
 function generateRockExplosion(rock) {
-    let i = rocks.indexOf(rock), tempAngles = [], tempRadius = [], minRadius = rocks[i].radius * .1, maxRadius = rocks[i].radius * .8;
+    let i = rocks.indexOf(rock), tempAngles = [], tempRadius = [], minRadius = rocks[i].radius * .1, maxRadius = rocks[i].radius * .8, pointAngle;
     rocks[i].points.forEach(point => {
         tempAngles.push({ a: randomInt(0, 360) });
         tempRadius.push({ r: randomInt(minRadius, maxRadius) });
@@ -858,7 +768,7 @@ function generateRockExplosion(rock) {
         centerY: rocks[i].centerY,
         radius: rocks[i].radius,
         points: rocks[i].points,
-        size: 100,
+        size: rocks[i].radius,
         angles: tempAngles,
         radii: tempRadius,
         rockSize: 1,
@@ -918,7 +828,7 @@ function drawRockExplosions() {
         explodingRock.opacity = explodingRock.opacity * .95;
         explodingRock.rockSize = explodingRock.rockSize * .95;
         explodingRock.radius++;
-        explodingRock.size--;
+        explodingRock.size = explodingRock.size * .99;
     });
 }
 const pointsToDraw = [];

@@ -63,6 +63,7 @@ interface iParticle {
     radius: number;
     points: any;
     rotationAngle?: number;
+    rotationCW?: boolean, //clockwise rotation
     rotateSpeed?: number;
     color: string;
     angle?: number;
@@ -739,7 +740,7 @@ function generateRocks(size: number) {
 
             let angle = 0;
             for (let i = 0; i < 12; i++) {
-                let distance = .9 + Math.random();  // random number from 0 to .99
+                let distance = .95 + Math.random();  // random number from 0 to .99
                 let x = radius * Math.cos(angle * Math.PI / 180) * distance;
                 let y = radius * Math.sin(angle * Math.PI / 180) * distance;
                 points.push({
@@ -752,12 +753,17 @@ function generateRocks(size: number) {
             let rotationAngle = 0;
             let color = 'black'; //'dimgray';
 
+            let rotateDir: boolean = false;
+            if (Math.round(Math.random()) == 1)
+                rotateDir = true;
+
             rocks.push({
                 centerX,
                 centerY,
                 radius,
                 points,
                 rotationAngle,
+                rotationCW: rotateDir,
                 rotateSpeed,
                 color
             });
@@ -873,28 +879,12 @@ function drawRocks() {
             ctx.fillStyle = rock.color;
             ctx.fill();
 
-            /*
-            // draw radius
-            ctx.beginPath();
-            ctx.arc(0, 0, rock.radius, 0, 360);
-            ctx.stroke();
-            */
-
-            /*
-            if (showStats) {
-                ctx.textAlign = 'left';
-                ctx.font = 'Bold 13px Courier New';
-                ctx.fillStyle = 'lime';
-                //ctx.fillText('X: ' + Math.round(rock.centerX + (theGrid[index].x * size)), -rock.centerX, rock.centerY - 14);
-                //ctx.fillText('Y: ' + Math.round(rock.centerY + (theGrid[index].y * size)), -rock.centerX, rock.centerY);
-                ctx.fillText('X: ' + Math.round(rock.centerX), -rock.centerX, rock.centerY - 14);
-                ctx.fillText('Y: ' + Math.round(rock.centerY), -rock.centerX, rock.centerY);
-            }
-            */
-
             ctx.restore();
 
-            rock.rotationAngle++;
+            if (rock.rotationCW)
+                rock.rotationAngle++;
+            else if (!rock.rotationCW)
+                rock.rotationAngle--;
         }
     });
 }

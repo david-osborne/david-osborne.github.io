@@ -2,8 +2,11 @@
 // in order to allow use of modules and multiple code files, when running locally, and not on a web server, must use the below chrome startup flag:
 //C:\ ... \Application\chrome.exe --allow-file-access-from-files
 
-import {Person} from './classes/person.js'
-const somePerson:Person = new Person;
+import { Person } from './classes/person.js';
+const somePerson: Person = new Person;
+
+import { playSoundEffect } from './classes/audio.js';
+import { playSong } from './classes/audio.js';
 
 somePerson.printSomething();
 
@@ -32,7 +35,7 @@ let gbl_canvasWidth = window.innerWidth,
     shotVelocity: number = 6,
     shotDuration: number = 100,
     shotEnabled: boolean = true,
-    shotInterval: number = 400,
+    shotInterval: number = 100,
     gbl_mouseX: number = 0,
     gbl_mouseY: number = 0,
     gbl_mouseAngle = 0,
@@ -44,16 +47,6 @@ let gbl_canvasWidth = window.innerWidth,
     viewEdgeBottom: number,
     rockPointsDurationMax: number = 50,
     pointsTotal: number = 0;
-
-//#region SOUNDS
-const audioLaser = new Audio('assets/audio/laserShoot.wav');
-const audioExplosion = new Audio('assets/audio/explosion.wav');
-const pickupCoin = new Audio('assets/audio/pickupCoin.wav');
-
-//let audioLaser = new Audio('assets/audio/laserShoot.wav'),
-//    audioExplosion = new Audio('assets/audio/explosion.wav');
-//https://sfxr.me/
-//#endregion
 
 interface iShip {
     angle: number;
@@ -132,7 +125,7 @@ function startGame() {
     setInterval(updateVelocity, 200);
 
     //init sounds
-    audioExplosion
+    playSoundEffect("explosion");
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
 }
@@ -313,7 +306,8 @@ function fireShot() {
             boolean: false
         });
 
-        audioLaser.play();
+        playSoundEffect("laser");
+        playSong("introTheme");
     }
 }
 
@@ -909,7 +903,7 @@ function collisionRocks() {
                 generateRockExplosion(rock);
                 removeRock(rock);
                 removeShot(shot);
-                audioExplosion.play();
+                playSoundEffect("explosion");
 
                 pointsToDraw.push({
                     centerX: rock.centerX,
@@ -930,7 +924,7 @@ function collisionShip() {
             generateRockExplosion(rock);
             removeRock(rock);
             ship.velocity = ship.velocity * 0.6;
-            audioExplosion.play();
+            playSoundEffect("explosion");
 
             pointsToDraw.push({
                 centerX: rock.centerX,
@@ -1095,8 +1089,7 @@ function cleanRockPoints() {
 
 function increasePoints(amount: number) {
     pointsTotal = pointsTotal + amount;
-    pickupCoin.volume = 0.5;
-    pickupCoin.play();
+    playSoundEffect("coin");
 }
 
 function cleanup() {

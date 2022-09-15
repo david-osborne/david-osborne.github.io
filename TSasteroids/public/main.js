@@ -1,12 +1,12 @@
 //https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes-oop.html
+// in order to allow use of modules and multiple code files, when running locally, and not on a web server, must use the below chrome startup flag:
+//C:\ ... \Application\chrome.exe --allow-file-access-from-files
 import { Person } from './classes/person.js';
 const somePerson = new Person;
+import { playSoundEffect } from './classes/audio.js';
+import { playSong } from './classes/audio.js';
 somePerson.printSomething();
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = false, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 400, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0;
-//#region SOUNDS
-const audioLaser = new Audio('assets/audio/laserShoot.wav');
-const audioExplosion = new Audio('assets/audio/explosion.wav');
-const pickupCoin = new Audio('assets/audio/pickupCoin.wav');
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = false, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 100, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0;
 let rocks = [];
 let flameParticle = [];
 let burstParticle = [];
@@ -50,7 +50,7 @@ function startGame() {
     generateRocks(theGridDim);
     setInterval(updateVelocity, 200);
     //init sounds
-    audioExplosion;
+    playSoundEffect("explosion");
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
 }
@@ -207,7 +207,8 @@ function fireShot() {
             shotVelocity: ship.velocity + shotVelocity,
             boolean: false
         });
-        audioLaser.play();
+        playSoundEffect("laser");
+        playSong("introTheme");
     }
 }
 function shotTimer() {
@@ -693,7 +694,7 @@ function collisionRocks() {
                 generateRockExplosion(rock);
                 removeRock(rock);
                 removeShot(shot);
-                audioExplosion.play();
+                playSoundEffect("explosion");
                 pointsToDraw.push({
                     centerX: rock.centerX,
                     centerY: rock.centerY,
@@ -713,7 +714,7 @@ function collisionShip() {
             generateRockExplosion(rock);
             removeRock(rock);
             ship.velocity = ship.velocity * 0.6;
-            audioExplosion.play();
+            playSoundEffect("explosion");
             pointsToDraw.push({
                 centerX: rock.centerX,
                 centerY: rock.centerY,
@@ -843,8 +844,7 @@ function cleanRockPoints() {
 }
 function increasePoints(amount) {
     pointsTotal = pointsTotal + amount;
-    pickupCoin.volume = 0.5;
-    pickupCoin.play();
+    playSoundEffect("coin");
 }
 function cleanup() {
     cleanupRockExplosions();

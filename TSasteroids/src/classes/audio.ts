@@ -4,7 +4,7 @@ const audioExplosion = new Audio('assets/audio/explosion.wav');
 const audioExplosionPlaying: Boolean = false;
 const audioCoin = new Audio('assets/audio/pickupCoin.wav');
 const audioCoinPlaying: Boolean = false;
-const introTheme = new Audio('assets/audio/ambientmain_0.ogg');
+const introTheme = new Audio('assets/audio/ambientmain_0.aac');
 const introThemePlaying: Boolean = false;
 
 export function playSoundEffect(effectName: string) {

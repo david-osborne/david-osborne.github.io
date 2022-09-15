@@ -6,7 +6,7 @@ const somePerson = new Person;
 import { playSoundEffect } from './classes/audio.js';
 import { playSong } from './classes/audio.js';
 somePerson.printSomething();
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = false, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 100, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = true, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 100, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0;
 let rocks = [];
 let flameParticle = [];
 let burstParticle = [];
@@ -294,7 +294,7 @@ function gameLoop(timeStamp) {
     if (showMouse)
         //drawMouseLine();
         drawMouseCrosshairs();
-    //drawMouseCircle();
+    drawMouseCircle();
     collisionDetection();
     cleanup();
     drawPoints();
@@ -309,11 +309,23 @@ function determineViewBoundries() {
     viewEdgeBottom = -Math.round(shipPosition.y - (gbl_canvasHeight / 2));
 }
 function drawMouseCircle() {
-    ctx.strokeStyle = 'red';
-    ctx.lineStyle = 2;
+    let distance = getDistance(gbl_mouseX, gbl_mouseY, gbl_canvasWidth / 2, gbl_canvasHeight / 2);
     ctx.beginPath();
-    ctx.arc(gbl_canvasWidth / 2, gbl_canvasHeight / 2, 100, 0, 360);
+    ctx.arc(gbl_canvasWidth / 2, gbl_canvasHeight / 2, distance, 0, 360);
+    ctx.strokeStyle = 'red';
+    ctx.setLineDash([5, 15]);
     ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(255,0,0, 0.2)";
+    ctx.fill();
+}
+function getDistance(x1, y1, x2, y2) {
+    //https://stackoverflow.com/questions/20916953/get-distance-between-two-points-in-canvas#:~:text=If%20you%20have%20two%20points%20%28x1%2C%20y1%29%20and,%2B%20b%2Ab%29%3B%20%2F%2F%20c%20is%20the%20distance%20Share
+    //pythagoras theorem
+    var a = x1 - x2;
+    var b = y1 - y2;
+    var c = Math.sqrt(a * a + b * b);
+    return c;
 }
 function drawMouseLine() {
     ctx.strokeStyle = 'blue';

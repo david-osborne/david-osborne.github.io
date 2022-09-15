@@ -30,7 +30,7 @@ let gbl_canvasWidth = window.innerWidth,
     worldSizeY: number = 0,
     showGrid: boolean = false,
     showStats: boolean = false,
-    showMouse: boolean = false,
+    showMouse: boolean = true,
     shotsFired: any[] = [],
     shotVelocity: number = 6,
     shotDuration: number = 100,
@@ -414,7 +414,8 @@ function gameLoop(timeStamp) {
     if (showMouse)
         //drawMouseLine();
         drawMouseCrosshairs();
-    //drawMouseCircle();
+
+    drawMouseCircle();
 
     collisionDetection();
 
@@ -435,11 +436,25 @@ function determineViewBoundries() {
 }
 
 function drawMouseCircle() {
-    ctx.strokeStyle = 'red';
-    ctx.lineStyle = 2;
+    let distance = getDistance(gbl_mouseX, gbl_mouseY, gbl_canvasWidth / 2, gbl_canvasHeight / 2);
+
     ctx.beginPath();
-    ctx.arc(gbl_canvasWidth / 2, gbl_canvasHeight / 2, 100, 0, 360);
+    ctx.arc(gbl_canvasWidth / 2, gbl_canvasHeight / 2, distance, 0, 360);
+    ctx.strokeStyle = 'red';
+    ctx.setLineDash([5, 15]);
     ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(255,0,0, 0.2)";
+    ctx.fill();
+}
+
+function getDistance(x1: number, y1: number, x2: number, y2: number) {
+    //https://stackoverflow.com/questions/20916953/get-distance-between-two-points-in-canvas#:~:text=If%20you%20have%20two%20points%20%28x1%2C%20y1%29%20and,%2B%20b%2Ab%29%3B%20%2F%2F%20c%20is%20the%20distance%20Share
+    //pythagoras theorem
+    var a = x1 - x2;
+    var b = y1 - y2;
+    var c = Math.sqrt(a * a + b * b);
+    return c;
 }
 
 function drawMouseLine() {

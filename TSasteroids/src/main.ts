@@ -8,6 +8,9 @@ const somePerson: Person = new Person;
 import { playSoundEffect } from './classes/audio.js';
 import { playSong } from './classes/audio.js';
 
+import { cFPS } from './classes/fps.js'
+const csFPS: cFPS = new cFPS;
+
 somePerson.printSomething();
 
 
@@ -15,9 +18,6 @@ let gbl_canvasWidth = window.innerWidth,
     gbl_canvasHeight = window.innerHeight,
     cvs,
     ctx,
-    secondsPassed,
-    oldTimeStamp,
-    fps = 0,
     gbl_timestampStart: Date,
     theGrid: any[] = [],
     theGridDim: number = 200,
@@ -392,12 +392,7 @@ function windowSize() {
 }
 
 function gameLoop(timeStamp) {
-    // Calculate the number of seconds passed since the last frame
-    secondsPassed = (timeStamp - oldTimeStamp) / 1000;
-    oldTimeStamp = timeStamp;
-
-    // Calculate fps
-    fps = Math.round(1 / secondsPassed);
+    let fps = csFPS.getFPS(timeStamp);
 
     clearCanvas();
     determineViewBoundries();
@@ -611,6 +606,8 @@ function drawStats(fps: number) {
         ctx.fillText(stat, 10, textY);
         textY += 14;
     });
+
+    csFPS.drawFPS(ctx);
 }
 
 function drawTranslatedObjects() {

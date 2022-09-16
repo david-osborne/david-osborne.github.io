@@ -5,8 +5,10 @@ import { Person } from './classes/person.js';
 const somePerson = new Person;
 import { playSoundEffect } from './classes/audio.js';
 import { playSong } from './classes/audio.js';
+import { cFPS } from './classes/fps.js';
+const csFPS = new cFPS;
 somePerson.printSomething();
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, secondsPassed, oldTimeStamp, fps = 0, gbl_timestampStart, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = true, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 100, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, gbl_timestampStart, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = true, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 100, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0;
 let rocks = [];
 let flameParticle = [];
 let burstParticle = [];
@@ -276,11 +278,7 @@ function windowSize() {
     ctx.canvas.height = gbl_canvasHeight;
 }
 function gameLoop(timeStamp) {
-    // Calculate the number of seconds passed since the last frame
-    secondsPassed = (timeStamp - oldTimeStamp) / 1000;
-    oldTimeStamp = timeStamp;
-    // Calculate fps
-    fps = Math.round(1 / secondsPassed);
+    let fps = csFPS.getFPS(timeStamp);
     clearCanvas();
     determineViewBoundries();
     drawTranslatedObjects();
@@ -460,6 +458,7 @@ function drawStats(fps) {
         ctx.fillText(stat, 10, textY);
         textY += 14;
     });
+    csFPS.drawFPS(ctx);
 }
 function drawTranslatedObjects() {
     // to improve performance, perform one transformation for all translated (shifted) objects

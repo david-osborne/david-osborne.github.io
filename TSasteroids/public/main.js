@@ -8,7 +8,7 @@ import { playSong } from './classes/audio.js';
 import { cFPS } from './classes/fps.js';
 const csFPS = new cFPS;
 somePerson.printSomething();
-let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, gbl_timestampStart, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = false, showMouse = true, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 100, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0;
+let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, gbl_timestampStart, theGrid = [], theGridDim = 200, theGridQty = 200, gridCount = 0, gridRows = 0, gridColumns = 0, gridsRendered = 0, worldSizeX = 0, worldSizeY = 0, showGrid = false, showStats = true, showMouse = true, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 100, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0;
 let rocks = [];
 let flameParticle = [];
 let burstParticle = [];
@@ -278,7 +278,6 @@ function windowSize() {
     ctx.canvas.height = gbl_canvasHeight;
 }
 function gameLoop(timeStamp) {
-    let fps = csFPS.getFPS(timeStamp);
     clearCanvas();
     determineViewBoundries();
     drawTranslatedObjects();
@@ -287,12 +286,12 @@ function gameLoop(timeStamp) {
     if (gbl_mouseDown)
         fireShot();
     if (showStats)
-        drawStats(fps);
+        drawStats(timeStamp);
     drawshipThrottle();
     if (showMouse)
         //drawMouseLine();
         drawMouseCrosshairs();
-    drawMouseCircle();
+    //drawMouseCircle();
     collisionDetection();
     cleanup();
     drawPoints();
@@ -428,7 +427,8 @@ function gridLookup(grid) {
     //let found = theGrid.find(({x})=> x === 10);
     return grid.x >= shipPosition.x;
 }
-function drawStats(fps) {
+function drawStats(timestamp) {
+    /*
     let stats = [
         'FPS: ' + fps,
         'Ship Position X: ' + -Math.round(shipPosition.x),
@@ -447,18 +447,22 @@ function drawStats(fps) {
         'ViewEdgeTop: ' + viewEdgeTop,
         'ViewEdgeBottom: ' + viewEdgeBottom
     ];
+
     let statsHeight = (stats.length + 1) * 14;
     ctx.fillStyle = 'deepskyblue';
     ctx.fillRect(0, 0, 200, statsHeight);
+
     ctx.textAlign = 'left';
     ctx.font = '14px Courier New';
     ctx.fillStyle = 'black';
+
     let textY = 14;
     stats.forEach(stat => {
         ctx.fillText(stat, 10, textY);
         textY += 14;
     });
-    csFPS.drawFPS(ctx);
+*/
+    csFPS.manageFPS(ctx, timestamp);
 }
 function drawTranslatedObjects() {
     // to improve performance, perform one transformation for all translated (shifted) objects

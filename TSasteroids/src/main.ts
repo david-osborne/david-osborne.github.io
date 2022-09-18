@@ -29,7 +29,7 @@ let gbl_canvasWidth = window.innerWidth,
     worldSizeX: number = 0,
     worldSizeY: number = 0,
     showGrid: boolean = false,
-    showStats: boolean = false,
+    showStats: boolean = true,
     showMouse: boolean = true,
     shotsFired: any[] = [],
     shotVelocity: number = 6,
@@ -392,8 +392,6 @@ function windowSize() {
 }
 
 function gameLoop(timeStamp) {
-    let fps = csFPS.getFPS(timeStamp);
-
     clearCanvas();
     determineViewBoundries();
     drawTranslatedObjects();
@@ -403,14 +401,14 @@ function gameLoop(timeStamp) {
     if (gbl_mouseDown)
         fireShot();
     if (showStats)
-        drawStats(fps);
+        drawStats(timeStamp);
     drawshipThrottle();
 
     if (showMouse)
         //drawMouseLine();
         drawMouseCrosshairs();
 
-    drawMouseCircle();
+    //drawMouseCircle();
 
     collisionDetection();
 
@@ -573,7 +571,8 @@ function gridLookup(grid) {
     return grid.x >= shipPosition.x;
 }
 
-function drawStats(fps: number) {
+function drawStats(timestamp) {
+    /*
     let stats = [
         'FPS: ' + fps,
         'Ship Position X: ' + -Math.round(shipPosition.x),
@@ -606,8 +605,8 @@ function drawStats(fps: number) {
         ctx.fillText(stat, 10, textY);
         textY += 14;
     });
-
-    csFPS.drawFPS(ctx);
+*/
+    csFPS.manageFPS(ctx, timestamp);
 }
 
 function drawTranslatedObjects() {

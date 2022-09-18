@@ -1,30 +1,25 @@
-let oldTimeStamp, fps;
-let fpsStats = [];
+let oldTimeStamp, fps = 0;
 export class cFPS {
     getFPS(timeStamp) {
         // Calculate the number of seconds passed since the last frame
         let secondsPassed = (timeStamp - oldTimeStamp) / 1000;
         oldTimeStamp = timeStamp;
         // Calculate fps
-        fps = Math.round(1 / secondsPassed);
-        this.manageFPS(fps);
-        return fps;
+        let x = Math.round(1 / secondsPassed);
+        fps = +x; //uranary parse to number
     }
-    manageFPS(fps) {
-        if (fpsStats.length >= 200) //delete oldest entry
-            fpsStats.splice(0, 1);
-        fpsStats.push(fps); //add new entry to array
+    manageFPS(ctx, timestamp) {
+        this.getFPS(timestamp);
+        this.drawFPS(ctx);
+        //console.log("fpsAvg: " + fpsAvg.toString() + " / fpsSum: " + fpsSum.toString());
     }
     drawFPS(ctx) {
-        ctx.fillStyle = 'magenta';
-        ctx.fillRect(200, 0, 400, 100);
-        ctx.strokeStyle = 'black';
-        fpsStats.forEach(entry => {
-            let i = fpsStats.indexOf(entry);
-            ctx.moveTo(400 - i, 100);
-            ctx.lineTo(400 - i, 100 - entry);
-            ctx.stroke();
-        });
+        ctx.fillStyle = "rgba(255,255,255, 0.4)";
+        ctx.fillRect(0, 0, 100, 30);
+        ctx.textAlign = 'left';
+        ctx.font = 'Bold 16px Courier New';
+        ctx.fillStyle = 'white';
+        ctx.fillText('FPS: ' + fps.toString(), 10, 20);
     }
 }
 //# sourceMappingURL=fps.js.map

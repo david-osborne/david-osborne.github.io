@@ -1,13 +1,13 @@
 {
-    "compileOnSave": true,
-    "compilerOptions": {
-      "module":"es2015",
-      "target": "es6",
-      "sourceMap": true,
-      "outDir": "./public",
-      "rootDir": "./src"
-    },
-    "files":[
-      "./src/main.ts"
-    ]
-  }
+  "compileOnSave": true,
+  "compilerOptions": {
+    "module": "es2015",
+    "target": "es6",
+    "sourceMap": true,
+    "outDir": "./public",
+    "rootDir": "./src"
+  },
+  "files": [
+    "./src/main.ts"
+  ]
+}

@@ -1,3 +1,4 @@
+//define audio content
 const audioLaser = new Audio('assets/audio/laserShoot.wav');
 const audioLaserPlaying: Boolean = false;
 const audioExplosion = new Audio('assets/audio/explosion.wav');

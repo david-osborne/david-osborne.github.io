@@ -1,4 +1,4 @@
-let oldTimeStamp, fps = 0;
+let oldTimeStamp, fps = 0, fpsMin = 0, fpsMax = 0, fpsFirstRun = true;
 export class cFPS {
     getFPS(timeStamp) {
         // Calculate the number of seconds passed since the last frame
@@ -9,9 +9,15 @@ export class cFPS {
         fps = +x; //uranary parse to number
     }
     manageFPS(ctx, timestamp) {
+        //update the FPS
         this.getFPS(timestamp);
+        if (fpsFirstRun && fps != 0) {
+            fpsMin = fps;
+            fpsMax = fps;
+            fpsFirstRun = false;
+        }
+        //draw FPS
         this.drawFPS(ctx);
-        //console.log("fpsAvg: " + fpsAvg.toString() + " / fpsSum: " + fpsSum.toString());
     }
     drawFPS(ctx) {
         ctx.fillStyle = "rgba(255,255,255, 0.4)";

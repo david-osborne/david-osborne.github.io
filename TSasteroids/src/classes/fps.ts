@@ -1,6 +1,9 @@
 let
   oldTimeStamp,
-  fps: number = 0;
+  fps: number = 0,
+  fpsMin: number = 0,
+  fpsMax: number = 0,
+  fpsFirstRun: boolean = true;
 
 export class cFPS {
   getFPS(timeStamp) {
@@ -14,10 +17,16 @@ export class cFPS {
   }
 
   manageFPS(ctx, timestamp) {
+    //update the FPS
     this.getFPS(timestamp)
 
+    if (fpsFirstRun && fps != 0){
+      fpsMin = fps;
+      fpsMax = fps;
+      fpsFirstRun = false;
+    }
+    //draw FPS
     this.drawFPS(ctx);
-    //console.log("fpsAvg: " + fpsAvg.toString() + " / fpsSum: " + fpsSum.toString());
   }
 
   drawFPS(ctx) {

@@ -165,7 +165,7 @@ function cleanArrays() {
     }
 }
 function drawText(fps) {
-    var d1 = new Date(), d2 = new Date("12/25/2021");
+    var d1 = new Date(), d2 = new Date("12/25/2022");
     var hh = d1.getHours().toString();
     var mm = d1.getMinutes().toString();
     var ss = d1.getSeconds().toString();

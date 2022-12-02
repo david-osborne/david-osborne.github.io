@@ -7,9 +7,9 @@ export class cStars {
   //stars: iParticle[] = [];
 
   generateStars(theGrid: any[], gridDim: number) {
-    theGrid.forEach(grid => {
-      let starCount = Math.sqrt(gridDim / 4);
+    let starCount = Math.sqrt(gridDim / 4);
 
+    theGrid.forEach(grid => {
       for (let i = 0; i < starCount; i++) {
         let twinkleChance = csFunctions.randomInt(0, 100),
           twinkleOn = 0;

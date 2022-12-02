@@ -21,29 +21,21 @@ import { functions } from './classes/functions.js';
 const csFunctions = new functions;
 import { cGrid } from './classes/grid.js';
 const csGrid = new cGrid;
+import { cShip } from './classes/ship.js';
+const csShip = new cShip;
 //globals
 let gbl_canvasWidth = window.innerWidth, gbl_canvasHeight = window.innerHeight, cvs, ctx, gbl_timestampStart, 
 //worldSizeX: number = 0,
 //worldSizeY: number = 0,
 showStats = true, showMouse = true, shotsFired = [], shotVelocity = 6, shotDuration = 100, shotEnabled = true, shotInterval = 400, gbl_mouseX = 0, gbl_mouseY = 0, gbl_mouseAngle = 0, gbl_mouseDown = false, rocksExploding = [], viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom, rockPointsDurationMax = 50, pointsTotal = 0, theGridDim = 20000;
 let rocks = [];
-let flameParticle = [];
+//let flameParticle: iParticle[] = [];
 let burstParticle = [];
-let ship = {
-    centerX: 0,
-    centerY: 0,
-    angle: 0,
-    gridRow: 0,
-    gridColumn: 0,
-    velocity: 0,
-    velocityMax: 10,
-    turnRate: 0,
-    throttle: 0
-};
 function init() {
     generateCanvas();
     cvs = document.getElementById('canvas');
     ctx = cvs.getContext('2d');
+    csShip.initShip();
     startGame();
 }
 function welcomeMessage() {
@@ -60,12 +52,11 @@ function startGame() {
     gbl_timestampStart = startTime;
     createEventListeners();
     csGrid.generateGrid();
-    //csStars.generateStars(csGrid.theGridDim);
-    //csStars.generateStars(theGridDim);
-    //csRocks.generateRocks(theGridDim);
+    csRocks.generateRocks(csGrid.theGrid, csGrid.theGridDim);
+    console.log(csGrid.theGrid.length + "/" + csGrid.theGridDim);
     setInterval(updateVelocity, 200);
     //init sounds
-    playSoundEffect("explosion");
+    //playSoundEffect("explosion");
     // Start the first frame request
     window.requestAnimationFrame(gameLoop);
 }
@@ -91,9 +82,9 @@ function mouseUp() {
 function wheel(e) {
     //e.preventDefault(); //disable default mouse scrolling behavior
     //let shipThrottle = shipVelocity;
-    ship.throttle += e.deltaY * -0.1;
+    csShip.ship.throttle += e.deltaY * -0.1;
     //restrict shipThrottle between min and max
-    ship.throttle = Math.min(Math.max(0, ship.throttle), 100);
+    csShip.ship.throttle = Math.min(Math.max(0, csShip.ship.throttle), 100);
 }
 function mouseMove(e) {
     var rect = cvs.getBoundingClientRect(); //get canvas boundries
@@ -131,20 +122,20 @@ function setShipAngle() {
     // angle in degrees
     var angleDeg = Math.round(angleRadians * (180 / Math.PI));
     gbl_mouseAngle = angleDeg;
-    ship.angle = gbl_mouseAngle + 90;
+    csShip.ship.angle = gbl_mouseAngle + 90;
 }
 function keyDown(e) {
     switch (e.code) {
         //left
         case "KeyA":
         case "ArrowLeft":
-            ship.angle = ship.angle * 1.1;
+            csShip.ship.angle = csShip.ship.angle - 6;
             //shipAngle -= shipTurnRate;
             break;
         //right
         case "KeyD":
         case "ArrowRight":
-            ship.angle = ship.angle * 0.9;
+            csShip.ship.angle = csShip.ship.angle + 6;
             //shipAngle += shipTurnRate;
             break;
         //up
@@ -185,41 +176,41 @@ function keyDown(e) {
 }
 function updateThrottle(action) {
     if (action == 'up') {
-        if (ship.throttle <= 90)
-            ship.throttle += 10;
+        if (csShip.ship.throttle <= 90)
+            csShip.ship.throttle += 10;
     }
     if (action == 'down') {
-        if (ship.throttle >= 10)
-            ship.throttle -= 10;
+        if (csShip.ship.throttle >= 10)
+            csShip.ship.throttle -= 10;
     }
     if (action == 'kill') {
-        ship.throttle = 0;
+        csShip.ship.throttle = 0;
     }
 }
 function updateVelocity() {
-    let targetVelocity = Math.round((ship.throttle / 100) * ship.velocityMax);
-    if (ship.velocity < targetVelocity)
-        ship.velocity++;
-    if (ship.velocity > targetVelocity)
-        ship.velocity--;
+    let targetVelocity = Math.round((csShip.ship.throttle / 100) * csShip.ship.velocityMax);
+    if (csShip.ship.velocity < targetVelocity)
+        csShip.ship.velocity++;
+    if (csShip.ship.velocity > targetVelocity)
+        csShip.ship.velocity--;
 }
 function shipMovement() {
-    ship.velocity = Math.round(ship.velocity);
-    let rad = ship.angle * (Math.PI / 180);
-    ship.centerX += Math.sin(rad) * -ship.velocity;
-    ship.centerY -= Math.cos(rad) * -ship.velocity;
+    csShip.ship.velocity = Math.round(csShip.ship.velocity);
+    let rad = csShip.ship.angle * (Math.PI / 180);
+    csShip.ship.centerX += Math.sin(rad) * -csShip.ship.velocity;
+    csShip.ship.centerY -= Math.cos(rad) * -csShip.ship.velocity;
 }
 function fireShot() {
     if (shotEnabled == true) {
         setTimeout(shotTimer, shotInterval);
         shotEnabled = false;
         shotsFired.push({
-            centerX: -ship.centerX,
-            centerY: -ship.centerY,
-            angle: ship.angle,
+            centerX: -csShip.ship.centerX,
+            centerY: -csShip.ship.centerY,
+            angle: csShip.ship.angle,
             duration: 0,
             radius: 2,
-            shotVelocity: ship.velocity + shotVelocity,
+            shotVelocity: csShip.ship.velocity + shotVelocity,
             boolean: false
         });
         playSoundEffect("laser");
@@ -295,9 +286,11 @@ function gameLoop(timeStamp) {
     determineViewBoundries();
     //update
     //csStars.updateStars(viewEdgeLeft, viewEdgeTop, viewEdgeRight, viewEdgeBottom);
+    csShip.generateFlameParticles(csShip.ship.centerX, csShip.ship.centerY);
+    csShip.moveParticles();
     //draw
     drawTranslatedObjects();
-    drawShip(gbl_canvasWidth / 2, gbl_canvasHeight / 2);
+    csShip.drawShip(ctx, gbl_canvasWidth / 2, gbl_canvasHeight / 2);
     shipMovement();
     if (gbl_mouseDown)
         fireShot();
@@ -316,10 +309,10 @@ function gameLoop(timeStamp) {
 }
 function determineViewBoundries() {
     // determine bounding view box
-    viewEdgeLeft = -Math.round(ship.centerX + (gbl_canvasWidth / 2));
-    viewEdgeRight = -Math.round(ship.centerX - (gbl_canvasWidth / 2));
-    viewEdgeTop = -Math.round(ship.centerY + (gbl_canvasHeight / 2));
-    viewEdgeBottom = -Math.round(ship.centerY - (gbl_canvasHeight / 2));
+    viewEdgeLeft = -Math.round(csShip.ship.centerX + (gbl_canvasWidth / 2));
+    viewEdgeRight = -Math.round(csShip.ship.centerX - (gbl_canvasWidth / 2));
+    viewEdgeTop = -Math.round(csShip.ship.centerY + (gbl_canvasHeight / 2));
+    viewEdgeBottom = -Math.round(csShip.ship.centerY - (gbl_canvasHeight / 2));
 }
 function drawMouseCircle() {
     let distance = getDistance(gbl_mouseX, gbl_mouseY, gbl_canvasWidth / 2, gbl_canvasHeight / 2);
@@ -368,7 +361,7 @@ function drawMouseCrosshairs() {
     ctx.beginPath();
     ctx.arc(gbl_mouseX, gbl_mouseY, 2, 0, 360);
     ctx.fill();
-    let mousePosX = Math.round((gbl_canvasWidth / 2) - gbl_mouseX + ship.centerX), mousePosY = Math.round((gbl_canvasHeight / 2) - gbl_mouseY + ship.centerY);
+    let mousePosX = Math.round((gbl_canvasWidth / 2) - gbl_mouseX + csShip.ship.centerX), mousePosY = Math.round((gbl_canvasHeight / 2) - gbl_mouseY + csShip.ship.centerY);
     if (showStats) {
         ctx.textAlign = 'left';
         ctx.font = 'Bold 13px Courier New';
@@ -391,111 +384,60 @@ function clearCanvas() {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, gbl_canvasWidth, gbl_canvasHeight);
 }
-function drawShip(x, y) {
-    //ctx.imageSmoothingEnabled = true;
-    //ctx.imageSmoothingQuality = "high";
-    ctx.save();
-    let rad = ship.angle * Math.PI / 180;
-    ctx.translate(x, y);
-    ctx.rotate(rad);
-    //drawShield();
-    //generateFlame();
-    drawFlame();
-    //ship
-    ctx.beginPath();
-    ctx.strokeStyle = 'white';
-    ctx.fillStyle = "blue";
-    ctx.lineWidth = 2;
-    ctx.moveTo(0, -20); //nose of ship
-    ctx.lineTo(12, 20); //lower right tip
-    ctx.lineTo(0, 10); //center
-    ctx.lineTo(-12, 20); //lower left tip
-    ctx.lineTo(0, -20); //nose of ship
-    ctx.fill();
-    ctx.stroke();
-    //shot range
-    /*
-    ctx.beginPath();
-    ctx.strokeStyle = 'blue';
-    ctx.lineWidth = 2;
-    ctx.arc(0, 0, 100, 0, .25 * Math.PI);
-    ctx.stroke();
-*/
-    ctx.restore();
-}
-function drawFlame() {
-    let x1 = 0;
-    let y1 = 10;
-    for (let i = 0; i < 14; i++) {
-        //angle ranges from 45 to 135...90 is center
-        let angle = csFunctions.randomInt(75, 105);
-        let length = csFunctions.randomInt(2, 10) * (ship.throttle / 10);
-        let x2 = x1 + Math.cos(Math.PI * angle / 180) * length;
-        let y2 = y1 + Math.sin(Math.PI * angle / 180) * length;
-        ctx.beginPath();
-        ctx.strokeStyle = 'blue';
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-    }
-}
 function gridLookup(grid) {
     //let found = theGrid.find(({x})=> x === 10);
-    return grid.x >= ship.centerX;
+    return grid.x >= csShip.ship.centerX;
 }
 function drawStats(timestamp) {
-    /*
     let stats = [
-        'FPS: ' + fps,
-        'Ship Position X: ' + -Math.round(ship.centerX),
-        'Ship Position Y: ' + -Math.round(ship.centerY),
-        'Ship Angle: ' + Math.round(ship.angle),
+        'FPS: ' + csFPS.getFPS(timestamp),
+        'Ship Position X: ' + -Math.round(csShip.ship.centerX),
+        'Ship Position Y: ' + -Math.round(csShip.ship.centerY),
+        'Ship Angle: ' + Math.round(csShip.ship.angle),
         //'Ship Grid: ' + theGrid.find(gridLookup),
-        'Grid Count: ' + gridCount,
-        'Grid Rows: ' + gridRows,
-        'Grid Columns: ' + gridColumns,
-        'Grids Rendered: ' + gridsRendered,
-        'Ship velocity: ' + ship.velocity,
-        'Ship Throttle: ' + ship.throttle,
-        'Rock Qty: ' + rocks.length,
+        'Grid Count: ' + csGrid.gridCount,
+        'Grid Rows: ' + csGrid.gridRows,
+        'Grid Columns: ' + csGrid.gridColumns,
+        'Grids Rendered: ' + csGrid.gridsRendered,
+        'Ship velocity: ' + csShip.ship.velocity,
+        'Ship Throttle: ' + csShip.ship.throttle,
+        'Rock Qty: ' + csRocks.rockCount,
         'ViewEdgeLeft: ' + viewEdgeLeft,
         'ViewEdgeRight: ' + viewEdgeRight,
         'ViewEdgeTop: ' + viewEdgeTop,
-        'ViewEdgeBottom: ' + viewEdgeBottom
+        'ViewEdgeBottom: ' + viewEdgeBottom,
+        'FlameParticles: ' + csShip.flameParticles.length
     ];
-
     let statsHeight = (stats.length + 1) * 14;
     ctx.fillStyle = 'deepskyblue';
-    ctx.fillRect(0, 0, 200, statsHeight);
-
+    ctx.fillRect(0, 40, 200, statsHeight);
     ctx.textAlign = 'left';
     ctx.font = '14px Courier New';
     ctx.fillStyle = 'black';
-
-    let textY = 14;
+    let textY = 14 + 40;
     stats.forEach(stat => {
         ctx.fillText(stat, 10, textY);
         textY += 14;
     });
-*/
     csFPS.manageFPS(ctx, timestamp);
 }
 function drawTranslatedObjects() {
     // to improve performance, perform one transformation for all translated (shifted) objects
     ctx.save();
     //ctx.translate((gbl_canvasWidth / 2) + ship.centerX - (size / 2), (gbl_canvasHeight / 2) + ship.centerY - (size / 2)); Center ship in grid
-    ctx.translate((gbl_canvasWidth / 2) + ship.centerX, (gbl_canvasHeight / 2) + ship.centerY);
+    ctx.translate((gbl_canvasWidth / 2) + csShip.ship.centerX, (gbl_canvasHeight / 2) + csShip.ship.centerY);
     // call drawing for translated (shifted) objects
     //csStars.drawStars(ctx);
-    csGrid.drawGrid(ctx, ship.centerX, ship.centerY, gbl_canvasWidth, gbl_canvasHeight);
-    //csRocks.drawRocks(ctx, viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom);
-    //csRocks.drawRockExplosions(ctx);
+    csGrid.drawGrid(ctx, csShip.ship.centerX, csShip.ship.centerY, gbl_canvasWidth, gbl_canvasHeight);
+    csShip.drawParticles(ctx);
+    csRocks.drawRocks(ctx, viewEdgeLeft, viewEdgeRight, viewEdgeTop, viewEdgeBottom);
+    csRocks.drawRockExplosions(ctx);
     drawRockPoints();
     drawShots();
     ctx.restore();
 }
 function drawshipThrottle() {
-    let shipThrottlePercent = ship.throttle / 100;
+    let shipThrottlePercent = csShip.ship.throttle / 100;
     ctx.beginPath();
     ctx.fillStyle = 'darkgreen';
     ctx.strokeStyle = 'lime';
@@ -506,7 +448,7 @@ function drawshipThrottle() {
     ctx.textAlign = 'right';
     ctx.font = 'Bold 16px Courier New';
     ctx.fillStyle = 'lime';
-    ctx.fillText(ship.throttle + '%', gbl_canvasWidth - 20, gbl_canvasHeight - 130);
+    ctx.fillText(csShip.ship.throttle + '%', gbl_canvasWidth - 20, gbl_canvasHeight - 130);
 }
 function drawPoints() {
     /*
@@ -556,11 +498,10 @@ function collisionRocks() {
 }
 ;
 function collisionShip() {
-    rocks.forEach(rock => {
+    csRocks.rocks.forEach(rock => {
         if (collisionDetect(rock, null)) {
             csRocks.generateRockExplosion(rock);
             csRocks.removeRock(rock);
-            ship.velocity = ship.velocity * 0.6;
             playSoundEffect("explosion");
             pointsToDraw.push({
                 centerX: rock.centerX,
@@ -585,8 +526,8 @@ function collisionDetect(object1, object2) {
         var dy = (object1.centerY) - (object2.centerY);
     }
     else { //ship
-        var dx = (object1.centerX) - (-ship.centerX);
-        var dy = (object1.centerY) - (-ship.centerY);
+        var dx = (object1.centerX) - (-csShip.ship.centerX);
+        var dy = (object1.centerY) - (-csShip.ship.centerY);
     }
     var distance = Math.sqrt(dx * dx + dy * dy);
     if (distance <= object1.radius + 10)
@@ -625,5 +566,6 @@ function cleanupRockExplosions() {
 function cleanup() {
     cleanupRockExplosions();
     cleanRockPoints();
+    csShip.cleanParticles();
 }
 //# sourceMappingURL=main.js.map

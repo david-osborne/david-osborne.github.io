@@ -3,8 +3,8 @@ const csFunctions = new functions;
 export class cStars {
     //stars: iParticle[] = [];
     generateStars(theGrid, gridDim) {
+        let starCount = Math.sqrt(gridDim / 4);
         theGrid.forEach(grid => {
-            let starCount = Math.sqrt(gridDim / 4);
             for (let i = 0; i < starCount; i++) {
                 let twinkleChance = csFunctions.randomInt(0, 100), twinkleOn = 0;
                 if (twinkleChance > 60)

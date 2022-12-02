@@ -5,7 +5,7 @@ export class cGrid {
 
   theGrid: any[] = [];
   theGridDim: number = 400; //square pixel size of each grid
-  theGridQty: number = 1000; //the size of the total grid
+  theGridQty: number = 500; //the size of the total grid
   gridCount: number = 0;
   gridRows: number = 0;
   gridColumns: number = 0;
@@ -14,7 +14,6 @@ export class cGrid {
 
   generateGrid() {
     // positive X / positive Y
-    this.gridCount = 0;
 
     let gridWidth = this.theGridQty, //total grid height
       gridHeight = this.theGridQty; //total grid width

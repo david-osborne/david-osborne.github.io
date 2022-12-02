@@ -1,4 +1,4 @@
-import { functions} from './functions.js'
+import { functions } from './functions.js'
 const csFunctions: functions = new functions;
 import { cGrid } from './grid.js'
 const csGrid: cGrid = new cGrid;
@@ -7,17 +7,18 @@ export class cRocks {
 
   rocks: any[] = [];
   rocksExploding: any[] = [];
+  rockCount: number = 0;
 
-  generateRocks(size: number) {
-    csGrid.theGrid.forEach(grid => {
+  generateRocks(theGrid: any[], gridDim: number) {
+    theGrid.forEach(grid => {
       //for (let count = 0; count < rockCount; count++) {
 
       let determine = csFunctions.randomInt(0, 100);  //number between 0 and 1
-      if (determine >= 50) { //2% chance of a rock in a grid
+      if (determine >= 70) { //2% chance of a rock in a grid
 
         let points: any[] = [],
-          centerX = csFunctions.randomInt(0, size) + (grid.x * csGrid.theGridDim),
-          centerY = csFunctions.randomInt(0, size) + (grid.y * csGrid.theGridDim),
+          centerX = csFunctions.randomInt(0, gridDim) + (grid.x * csGrid.theGridDim),
+          centerY = csFunctions.randomInt(0, gridDim) + (grid.y * csGrid.theGridDim),
           radius = csFunctions.randomInt(10, 40),
           rotateSpeed = Math.random();
 
@@ -50,6 +51,8 @@ export class cRocks {
           rotateSpeed,
           color
         });
+
+        this.rockCount++;
       }
     });
   }
@@ -162,42 +165,7 @@ export class cRocks {
         //ctx.fill();
       });
 
-      //draw red filled circle
-      ctx.fillStyle = "rgba(255,0,0," + explodingRock.opacity + ")";
-      ctx.beginPath();
-      ctx.arc(explodingRock.centerX, explodingRock.centerY, explodingRock.radius, 0, 360);
-      //ctx.stroke();
-      ctx.fill();
-
-      //draw orange filled circle
-      ctx.fillStyle = "rgba(255,165,0," + explodingRock.opacity + ")";
-      ctx.beginPath();
-      ctx.arc(explodingRock.centerX, explodingRock.centerY, explodingRock.radius * 0.6, 0, 360);
-      //ctx.stroke();
-      ctx.fill();
-
-      //draw yellow filled circle
-      ctx.fillStyle = "rgba(255,255,0," + explodingRock.opacity + ")";
-      ctx.beginPath();
-      ctx.arc(explodingRock.centerX, explodingRock.centerY, explodingRock.radius * 0.3, 0, 360);
-      //ctx.stroke();
-      ctx.fill();
-
-      //draw purple filled circle
-      ctx.fillStyle = "rgba(128,0,128," + explodingRock.opacity + ")";
-      ctx.beginPath();
-      ctx.arc(explodingRock.centerX, explodingRock.centerY, explodingRock.radius * 0.1, 0, 360);
-      //ctx.stroke();
-      ctx.fill();
-
-      //draw purple traced circle
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = "rgba(128,0,128," + explodingRock.opacity + ")";
-      ctx.beginPath();
-      ctx.arc(explodingRock.centerX, explodingRock.centerY, explodingRock.radius, 0, 360);
-      ctx.stroke();
-
-      explodingRock.opacity = explodingRock.opacity * .95;
+      explodingRock.opacity = 1; //explodingRock.opacity * .95;
       explodingRock.rockSize = explodingRock.rockSize * .95;
       explodingRock.radius++;
       explodingRock.size = explodingRock.size * .99;

@@ -7,6 +7,7 @@ export class cFPS {
         // Calculate fps
         let x = Math.round(1 / secondsPassed);
         fps = +x; //uranary parse to number
+        return fps;
     }
     manageFPS(ctx, timestamp) {
         //update the FPS

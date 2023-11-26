@@ -60,9 +60,9 @@ function generateArrays() {
         xDelta: 0,
         xDir: randomInt(1, 3),
         radius: randomInt(2, 4),
-        opacity: Math.random() + 0.3,
-        velY: randomInt(5, 25) / 10,
-        velX: randomInt(1, 10) / 100,
+        opacity: Math.random() + 0.3, //math random generates between 0 and 1, sets min at 0.3
+        velY: randomInt(5, 25) / 10, //results in 0.3 to 1.0
+        velX: randomInt(1, 10) / 100, //results in 0.01 to 0.1
         meltTime: 0,
         type: randomInt(1, 100)
     });
@@ -165,12 +165,16 @@ function cleanArrays() {
     }
 }
 function drawText(fps) {
-    var d1 = new Date(), d2 = new Date("12/25/2022");
+    var d1 = new Date(), d2 = new Date();
+    d2.setMonth(11);
+    d2.setDate(25);
+    d2.setFullYear(d1.getFullYear());
+    console.log(d2);
     var hh = d1.getHours().toString();
     var mm = d1.getMinutes().toString();
     var ss = d1.getSeconds().toString();
     var ms = d1.getMilliseconds().toString();
-    var dateDiff = d2.getDate() - d1.getDate();
+    var dateDiff = Math.floor((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)); //https://stackoverflow.com/questions/7763327/how-to-calculate-date-difference-in-javascript
     /*
     ctx.textAlign = 'left';
     ctx.font = '24px Courier New';

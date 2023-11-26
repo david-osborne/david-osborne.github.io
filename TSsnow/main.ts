@@ -218,14 +218,18 @@ function cleanArrays() {
 }
 
 function drawText(fps: number) {
-    const d1 = new Date(),
-        d2 = new Date("12/25/2021");
+    let d1 = new Date(),
+        d2 = new Date();
+    d2.setMonth(11);
+    d2.setDate(25);
+    d2.setFullYear(d1.getFullYear());
+    console.log(d2);
     let hh = d1.getHours().toString();
     let mm = d1.getMinutes().toString();
     let ss = d1.getSeconds().toString();
     let ms = d1.getMilliseconds().toString();
 
-    let dateDiff = d2.getDate() - d1.getDate();
+    let dateDiff = Math.floor((d2.getTime() - d1.getTime()) / (1000*60*60*24)); //https://stackoverflow.com/questions/7763327/how-to-calculate-date-difference-in-javascript
 
     /*
     ctx.textAlign = 'left';
